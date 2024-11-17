@@ -1,7 +1,8 @@
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from app import app, db
-from app.models import Account, User, Book, Author, Genre, BookReceipt, BookStore, BookReceiptDetail
+from app.models import Account, User, Book, Author, Genre, BookReceipt, BookStore, BookReceiptDetail, Order, OrderDetail
+
 admin = Admin(app=app, name='Quản lý của hàng sách')
 
 
@@ -12,7 +13,7 @@ admin.add_view(AccountView(Account, db.session))
 
 
 class UserView(ModelView):
-    form_excluded_columns = ('book_receipt','create_date')
+    form_excluded_columns = ('book_receipt','create_date','buy_other_ids', 'sell_other_ids')
 
 admin.add_view(UserView(User, db.session))
 
@@ -46,6 +47,11 @@ class BaseView(ModelView):
 admin.add_view(BaseView(Author, db.session))
 admin.add_view(BaseView(Genre, db.session))
 
+class OrderView(ModelView):
+    form_excluded_columns = ('other_details', 'create_date')
+
+admin.add_view(OrderView(Order, db.session))
+admin.add_view(BaseView(OrderDetail, db.session))
 
 
 
