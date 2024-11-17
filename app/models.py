@@ -24,9 +24,9 @@ class User(Item):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     account_role = db.Column(db.Enum(AccountRole), nullable=False, default=AccountRole.KhachHang)
-    # book_receipt = db.relationship('BookReceipt', backref='user', lazy=True)
-    # buy_other_ids = db.relationship('Order', backref='customer', lazy=True, foreign_keys='Order.customer_id')
-    # sell_other_ids = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.employee_id')
+    book_receipts = db.relationship('BookReceipt', backref='user', lazy=True)
+    buy_others = db.relationship('Order', backref='customer', lazy=True, foreign_keys='Order.customer_id')
+    sell_others = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.employee_id')
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name
@@ -52,18 +52,20 @@ class Genre(Item):
 
 class Book(Item):
     name = db.Column(db.String(50), unique=True, nullable=False)
-    authors = db.relationship('Author', secondary=Book_Author, lazy=True, backref=db.backref('books', lazy=True))
-    genres = db.relationship('Genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
-    book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
+    authors = db.relationship('author', secondary=Book_Author, lazy=True, backref=db.backref('books', lazy=True))
+    genres = db.relationship('genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
     price = db.Column(db.Float, nullable=False)
+
+    book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
     order_details = db.relationship('OrderDetail', backref='book', lazy=True)
+    book_inventory = db.relationship('BookInventory', backref='book', lazy=True, uselist=False)
+
     def __str__(self):
         return self.name
 
 class BookReceipt(Item):
-    books = db.relationship('BookReceiptDetail', backref='receipt', lazy=True)
+    book_receipt_details = db.relationship('BookReceiptDetail', backref='receipt', lazy=True)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
-    book_store_id = db.Column(db.Integer, db.ForeignKey('book_store.id'), nullable=False)
 
     def __str__(self):
         return f"Receipt {self.id}"
@@ -73,12 +75,11 @@ class BookReceiptDetail(db.Model):
     book_receipt_id = db.Column(db.Integer, db.ForeignKey(BookReceipt.id), primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
 
-class BookStore(Item):
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    book_receipts = db.relationship('BookReceipt', backref='bookStore', lazy=True)
-
-    def __str__(self):
-        return self.name
+class BookInventory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    current_quantity = db.Column(db.Integer, nullable=False)
+    last_updated = db.Column(db.DateTime, nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey(Book.id), nullable=False, unique=True)
 
 class OrderStatus(enum.Enum):
     DONE = 'done'
