@@ -1,4 +1,7 @@
 import enum
+
+from sqlalchemy import delete
+
 from app import db, app
 import datetime
 
@@ -52,8 +55,8 @@ class Genre(Item):
 
 class Book(Item):
     name = db.Column(db.String(50), unique=True, nullable=False)
-    authors = db.relationship('author', secondary=Book_Author, lazy=True, backref=db.backref('books', lazy=True))
-    genres = db.relationship('genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
+    authors = db.relationship('Author', secondary=Book_Author, lazy=True, backref=db.backref('books', lazy=True))
+    genres = db.relationship('Genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
     price = db.Column(db.Float, nullable=False)
 
     book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
@@ -64,7 +67,7 @@ class Book(Item):
         return self.name
 
 class BookReceipt(Item):
-    book_receipt_details = db.relationship('BookReceiptDetail', backref='receipt', lazy=True)
+    book_receipt_details = db.relationship('BookReceiptDetail', backref='receipt', lazy=True, cascade="all,delete")
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
 
     def __str__(self):
