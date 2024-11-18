@@ -3,7 +3,7 @@ from flask_admin.contrib.sqla import ModelView
 from app import app, db
 from app.models import User, Book, Author, Genre, BookReceipt, BookReceiptDetail,BookInventory, Order, OrderDetail
 
-admin = Admin(app=app, name='Quản lý của hàng sách')
+admin = Admin(app=app, name='Book Store Admin')
 
 
 class UserView(ModelView):
