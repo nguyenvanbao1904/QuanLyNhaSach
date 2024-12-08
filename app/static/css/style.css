@@ -1,0 +1,11 @@
+body{
+    background-color: #1b3764;
+    font-size: 17px;
+}
+
+*{
+    color: #f6f8fc !important;
+}
+input{
+    color: black !important;
+}

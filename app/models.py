@@ -1,9 +1,7 @@
 import enum
-
-from sqlalchemy import delete
-
 from app import db, app
 import datetime
+from flask_login import UserMixin
 
 class Item(db.Model):
     __abstract__ = True
@@ -17,11 +15,11 @@ class AccountRole(enum.Enum):
     KhachHang = 'khachHang'
 
 
-class User(Item):
-    user_name = db.Column(db.String(30), unique=True, nullable=False)
-    password = db.Column(db.String(30), nullable=False)
-    first_name = db.Column(db.String(30), unique=True, nullable=False)
-    last_name = db.Column(db.String(30), unique=True, nullable=False)
+class User(Item, UserMixin):
+    username = db.Column(db.String(30), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    first_name = db.Column(db.String(30), unique=False, nullable=False)
+    last_name = db.Column(db.String(30), unique=False, nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=True)
     phone_number = db.Column(db.String(20), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
@@ -33,6 +31,9 @@ class User(Item):
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name
+
+    def get_id(self):
+        return str(self.id)
 
 Book_Author = db.Table('book_author',
                        db.Column('author_id', db.Integer, db.ForeignKey('author.id'), primary_key=True),
@@ -88,6 +89,7 @@ class OrderStatus(enum.Enum):
     DONE = 'done'
     PROCESSING = 'processing'
     FAILED = 'failed'
+    PENDING = 'pending'
 
 class Order(Item):
     customer_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)

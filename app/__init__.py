@@ -8,3 +8,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.secret_key = "kjasdlkasjdlkasdjlkasdjalskdjalskdj"
 
 db = SQLAlchemy(app)
+from flask_login import LoginManager
+login_manager = LoginManager()
+login_manager.init_app(app)
