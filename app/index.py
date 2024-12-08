@@ -37,9 +37,7 @@ def signup():
         return redirect(request.url)
     err_msg = ""
     if request.method == "POST":
-        print(request.form)
         username = request.form.get("username")
-        print(username)
         password = request.form.get("password")
         password_confirm = request.form.get("password_confirm")
         first_name = request.form.get("first_name")
