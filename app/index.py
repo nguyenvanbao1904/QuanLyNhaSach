@@ -6,9 +6,15 @@ from flask_login import login_user, login_required, logout_user
 
 @app.route('/')
 def home():
-    books = dao.get_all_book()
+    genre = request.args.get('genre')
+    orderby = request.args.get('orderby')
+    if genre :
+        books = dao.get_book_by_genre(genre)
+    else:
+        books = dao.get_all_book(orderby)
+
     title_book = books[random.randint(0, len(books) - 1)]
-    return render_template('index.html', books=books, title_book=title_book)
+    return render_template('index.html', books=books, title_book=title_book, genre=genre)
 
 @login_manager.user_loader
 def load_user(user_id):

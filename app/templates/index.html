@@ -1,40 +1,29 @@
 {% extends 'base/base.html' %}
-{%block content%}
+{% block content %}
 
 <div class="w-100 bg-blue min-vh-100 d-flex align-items-center">
     <div class="container">
-        <div class="row ">
-            <!-- Left Section -->
+        <div class="row">
             <div class="col-md-6 d-flex flex-column justify-content-center text-white">
-                <h6 class="mb-2 fst-italic fs-3" style="color: #FFC107 !important;">Welcome To PhuongAnhVu's
-                    Bookstore!!!</h6>
-                <h1 class="fw-bold">{{title_book.name}}</h1>
-                <p class="mb-4">
-                    {{title_book.description}}
-                </p>
+                <h6 class="mb-2 fst-italic fs-3" style="color: #FFC107;">Welcome To PhuongAnhVu's Bookstore!!!</h6>
+                <h1 class="fw-bold">{{ title_book.name }}</h1>
+                <p class="mb-4">{{ title_book.description }}</p>
                 <div class="d-flex gap-3">
                     <button class="btn btn-custom px-4 py-2 text-blue">Thêm vào giỏ hàng</button>
                 </div>
                 <div class="d-flex gap-5 mt-4">
-                    <span>
-                        <strong>Số trang:</strong> {{title_book.pages}} trang
-                    </span>
-                    <span>
-                        <strong>Thời lượng:</strong> {{title_book.duration}} giờ
-                    </span>
-                    <!--                    <span>-->
-                    <!--                        <strong>Rating:</strong> 4.5/5 (305 ratings)-->
-                    <!--                    </span>-->
+                    <span><strong>Số trang:</strong> {{ title_book.pages }} trang</span>
+                    <span><strong>Thời lượng:</strong> {{ title_book.duration }} giờ</span>
                 </div>
             </div>
-            <!-- Right Section -->
+
             <div class="col-md-6 d-flex justify-content-center align-items-center">
                 <div class="book-card">
-                    <a class="ripple" data-mdb-ripple-color="light" href="#!">
+                    <a href="#!" class="ripple" data-mdb-ripple-color="light">
                         <img
-                                alt="example"
+                                alt="{{ title_book.name }}"
                                 class="img-fluid rounded"
-                                src={{title_book.image}}
+                                src="{{ title_book.image }}"
                         />
                     </a>
                 </div>
@@ -43,28 +32,48 @@
     </div>
 </div>
 
-
 <section class="py-5 d-flex align-items-center" style="min-height: 80vh">
     <div class="container text-center">
-        <h2 class="mb-4 text-blue" style="font-weight: bold">Tất cả sách trong cửa hàng</h2>
+        {%if genre%}
+        <h2 class="mb-4 text-blue fw-bold">Tất cả sách thuộc thể loại {{genre.lower()}}</h2>
+        {%else%}
+        <h2 class="mb-4 text-blue fw-bold">Tất cả sách trong cửa hàng</h2>
+        {%endif%}
         <hr class="w-25 mx-auto mb-5" style="border-top: 3px solid #f5b301;">
-
+        <div class="dropdown text-end">
+            <button
+                    class="btn ms-3 btn-custom fs12 text-blue dropdown-toggle"
+                    type="button"
+                    id="dropdownMenuButton"
+                    data-mdb-toggle="dropdown"
+                    aria-expanded="false"
+            >
+                Sắp xếp theo
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <li><a class="dropdown-item text-blue" href="/">Mới nhất</a></li>
+                <li><a class="dropdown-item text-blue" href="/?orderby=o1">Giá tăng dần</a></li>
+                <li><a class="dropdown-item text-blue" href="/?orderby=o2">Giá giảm dần</a></li>
+            </ul>
+        </div>
         <div class="row">
-            {%for book in books%}
+            {% for book in books %}
             <div class="col-md-6 mb-4 d-flex mt-5">
                 <div class="col-6 d-flex flex-column justify-content-between" style="max-width: 40%">
                     <img
-                            src={{book.image}}
+                            src="{{ book.image }}"
                             class="img-fluid rounded shadow-lg"
-                            alt="Atomic One's"
-                            style="max-width: 100%;">
+                            alt="{{ book.name }}"
+                            style="max-width: 100%;"
+                    />
                 </div>
+
                 <div class="col-6">
                     <div class="ml-3 d-flex flex-column justify-content-around align-items-start p-4"
                          style="min-height: 100%; text-align: left">
-                        <h5 class="fw-bold text-blue fs-2">{{book.name}}</h5>
-                        <p class="text-warning fw-bold mb-1 fs-3">{{book.price}} VND</p>
-                        <p class="mb-1" style="color: #969aa0 !important;">{{book.description}}</p>
+                        <h5 class="fw-bold text-blue fs-2">{{ book.name }}</h5>
+                        <p class="text-warning fw-bold mb-1 fs-3 price" data-price="{{ book.price }}"></p>
+                        <p class="mb-1" style="color: #969aa0!important;">{{ book.description }}</p>
                         <p class="text-muted fw-bold mb-3">
                             <i class="fas fa-circle text-blue"></i>
                             {% for genre in book.genres %}
@@ -72,16 +81,35 @@
                             endif %}
                             {% endfor %}
                         </p>
-
                         <button class="btn btn-primary btn-custom fs12 text-blue">Thêm vào giỏ hàng</button>
                     </div>
                 </div>
             </div>
-
-            {%endfor%}
-
+            {% endfor %}
         </div>
     </div>
 </section>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const priceElements = document.querySelectorAll('.price');
+        priceElements.forEach(priceElement => {
+            const rawPrice = parseFloat(priceElement.getAttribute('data-price'));
+            if (!isNaN(rawPrice)) {
+                const formattedPrice = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                    minimumFractionDigits: 0
+                }).format(rawPrice);
+                priceElement.textContent = formattedPrice;
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        var dropdowns = document.querySelectorAll('.dropdown-toggle');
+        dropdowns.forEach(function(dropdown) {
+            new mdb.Dropdown(dropdown);
+        });
+    });
+</script>
 {% endblock %}
