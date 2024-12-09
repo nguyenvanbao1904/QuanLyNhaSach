@@ -1,15 +1,55 @@
-body{
-    background: #1b3764;
+body {
+    overflow-x: hidden;
     font-size: 17px;
 }
 
-*{
+* {
     color: #f6f8fc !important;
 }
-input{
+
+input {
     color: black !important;
 }
 
-.err_msg{
+.err_msg {
     color: orangered !important;
+}
+
+.book-card {
+    max-width: 400px;
+    border-radius: 15px;
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-custom {
+    background-color: #FFC107;
+    font-weight: bold;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.btn-custom:hover {
+    background-color: #e0a800;
+}
+
+.fs12{
+    font-size: 12px !important;
+}
+
+.text-blue{
+    color: #0B2042 !important;
+}
+
+p {
+    margin-bottom: 10px;
+    font-family: Inter, sans-serif;
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.bg-blue{
+    background: #1b3764;
 }

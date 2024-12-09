@@ -1,10 +1,14 @@
+import random
+
 from app import app, login_manager, dao
 from flask import render_template, redirect, url_for, request, session
 from flask_login import login_user, login_required, logout_user
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    books = dao.get_all_book()
+    title_book = books[random.randint(0, len(books) - 1)]
+    return render_template('index.html', books=books, title_book=title_book)
 
 @login_manager.user_loader
 def load_user(user_id):

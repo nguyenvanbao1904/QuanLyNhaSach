@@ -1,4 +1,87 @@
 {% extends 'base/base.html' %}
 {%block content%}
-<h1>hello</h1>
+
+<div class="w-100 bg-blue min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row ">
+            <!-- Left Section -->
+            <div class="col-md-6 d-flex flex-column justify-content-center text-white">
+                <h6 class="mb-2 fst-italic fs-3" style="color: #FFC107 !important;">Welcome To PhuongAnhVu's
+                    Bookstore!!!</h6>
+                <h1 class="fw-bold">{{title_book.name}}</h1>
+                <p class="mb-4">
+                    {{title_book.description}}
+                </p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-custom px-4 py-2 text-blue">Thêm vào giỏ hàng</button>
+                </div>
+                <div class="d-flex gap-5 mt-4">
+                    <span>
+                        <strong>Số trang:</strong> {{title_book.pages}} trang
+                    </span>
+                    <span>
+                        <strong>Thời lượng:</strong> {{title_book.duration}} giờ
+                    </span>
+                    <!--                    <span>-->
+                    <!--                        <strong>Rating:</strong> 4.5/5 (305 ratings)-->
+                    <!--                    </span>-->
+                </div>
+            </div>
+            <!-- Right Section -->
+            <div class="col-md-6 d-flex justify-content-center align-items-center">
+                <div class="book-card">
+                    <a class="ripple" data-mdb-ripple-color="light" href="#!">
+                        <img
+                                alt="example"
+                                class="img-fluid rounded"
+                                src={{title_book.image}}
+                        />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<section class="py-5 d-flex align-items-center" style="min-height: 80vh">
+    <div class="container text-center">
+        <h2 class="mb-4 text-blue" style="font-weight: bold">Tất cả sách trong cửa hàng</h2>
+        <hr class="w-25 mx-auto mb-5" style="border-top: 3px solid #f5b301;">
+
+        <div class="row">
+            {%for book in books%}
+            <div class="col-md-6 mb-4 d-flex mt-5">
+                <div class="col-6 d-flex flex-column justify-content-between" style="max-width: 40%">
+                    <img
+                            src={{book.image}}
+                            class="img-fluid rounded shadow-lg"
+                            alt="Atomic One's"
+                            style="max-width: 100%;">
+                </div>
+                <div class="col-6">
+                    <div class="ml-3 d-flex flex-column justify-content-around align-items-start p-4"
+                         style="min-height: 100%; text-align: left">
+                        <h5 class="fw-bold text-blue fs-2">{{book.name}}</h5>
+                        <p class="text-warning fw-bold mb-1 fs-3">{{book.price}} VND</p>
+                        <p class="mb-1" style="color: #969aa0 !important;">{{book.description}}</p>
+                        <p class="text-muted fw-bold mb-3">
+                            <i class="fas fa-circle text-blue"></i>
+                            {% for genre in book.genres %}
+                            <a href="/?genre={{ genre }}" class="text-blue">{{ genre }}</a>{% if not loop.last %}, {%
+                            endif %}
+                            {% endfor %}
+                        </p>
+
+                        <button class="btn btn-primary btn-custom fs12 text-blue">Thêm vào giỏ hàng</button>
+                    </div>
+                </div>
+            </div>
+
+            {%endfor%}
+
+        </div>
+    </div>
+</section>
+
 {% endblock %}

@@ -12,14 +12,11 @@
     <title>Document</title>
 </head>
 <body>
-    <div class="container d-flex flex-column min-vh-100">
-        {% include 'base/header.html' %}
-        {% block content required%}
-        {% endblock %}
-        {% include 'base/footer.html' %}
-    </div>
-
-    <!-- MDBootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
+    {% include 'base/header.html' %}
+    {% block content required%}
+    {% endblock %}
+    {% include 'base/footer.html' %}
+<!-- MDBootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import hashlib
 
 from app import db
-from app.models import User
+from app.models import User, Book
 
 
 def check_login(username, password):
@@ -23,3 +23,6 @@ def add_user(username, password, first_name, last_name):
 
 def get_user_by_id(user_id):
     return User.query.get(user_id)
+
+def get_all_book():
+    return Book.query.all()

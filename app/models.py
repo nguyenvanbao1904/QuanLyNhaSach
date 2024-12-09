@@ -61,6 +61,9 @@ class Book(Item):
     genres = db.relationship('Genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
     price = db.Column(db.Float, nullable=False)
     image = db.Column(db.String(255), nullable=True)
+    description = db.Column(db.Text, nullable=False, default='Đây là sản phẩm mới')
+    pages = db.Column(db.Integer, nullable=False)
+    duration = db.Column(db.Float, nullable=False)
 
     book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
     order_details = db.relationship('OrderDetail', backref='book', lazy=True)
