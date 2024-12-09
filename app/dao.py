@@ -1,5 +1,4 @@
 import hashlib
-from linecache import cache
 
 from app import db
 from app.models import User

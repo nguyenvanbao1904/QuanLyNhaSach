@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary mt-3">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a class="navbar-brand" href="/">Home</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -33,6 +33,9 @@
             </ul>
             {% if current_user.is_authenticated %}
                 Hi {{ current_user.first_name }}!
+                {% if current_user.avatar%}
+                <img src={{current_user.avatar}} class="rounded-circle shadow-4 ms-3" style="width: 40px" alt="Avatar" />
+                {% endif %}
                 <a href="{{ url_for('logout') }}" class="btn btn-primary ms-3">Đăng xuất</a>
 
             {% else %}

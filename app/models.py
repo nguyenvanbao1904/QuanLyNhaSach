@@ -23,6 +23,7 @@ class User(Item, UserMixin):
     email = db.Column(db.String(30), unique=True, nullable=True)
     phone_number = db.Column(db.String(20), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    avatar = db.Column(db.String(255), nullable=True)
 
     account_role = db.Column(db.Enum(AccountRole), nullable=False, default=AccountRole.KhachHang)
     book_receipts = db.relationship('BookReceipt', backref='user', lazy=True)
@@ -59,6 +60,7 @@ class Book(Item):
     authors = db.relationship('Author', secondary=Book_Author, lazy=True, backref=db.backref('books', lazy=True))
     genres = db.relationship('Genre',  secondary=Book_Genre ,backref=db.backref('books', lazy=True), lazy=True)
     price = db.Column(db.Float, nullable=False)
+    image = db.Column(db.String(255), nullable=True)
 
     book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
     order_details = db.relationship('OrderDetail', backref='book', lazy=True)
