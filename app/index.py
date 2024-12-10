@@ -1,8 +1,8 @@
 import random
 
 from app import app, login_manager, dao
-from flask import render_template, redirect, url_for, request, session
-from flask_login import login_user, login_required, logout_user
+from flask import render_template, redirect, url_for, request, session, jsonify
+from flask_login import login_user, login_required, logout_user, current_user
 
 @app.route('/')
 def home():
@@ -62,6 +62,38 @@ def signup():
 
 
     return render_template("signup.html", err_msg=err_msg)
+
+@app.route('/cart', methods=['GET', 'POST'])
+def cart():
+    if request.method == 'POST':
+        try:
+            my_cart = dao.create_cart(current_user.id)
+            dic = request.form.to_dict()
+            dic['order_id'] = my_cart.id
+            dao.create_order_cart(**dic)
+            return jsonify({
+                'success': True,
+                'message': 'Item added to cart successfully'
+            }), 201
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'An error occurred: {str(e)}'
+            }), 500
+    my_carts = dao.get_cart(current_user.id)
+    total_prirce = dao.get_total_price(my_carts)
+    return render_template('cart.html', carts=my_carts, total_prirce=total_prirce)
+
+@app.route('/delete/cart/<int:id>', methods=['DELETE'])
+def delete_cart_detail(id):
+    try:
+        dao.delete_cart_detail(id, current_user.id)
+        return '',204
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }), 500
 
 @login_manager.user_loader
 def load_user(user_id):

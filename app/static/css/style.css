@@ -57,3 +57,7 @@ p {
 .bg-yellow{
     background-color: #FFC107;
 }
+
+.text-yellow{
+    color: #FFC107!important;
+}

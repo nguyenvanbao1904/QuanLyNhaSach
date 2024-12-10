@@ -9,7 +9,11 @@
                 <h1 class="fw-bold">{{ title_book.name }}</h1>
                 <p class="mb-4">{{ title_book.description }}</p>
                 <div class="d-flex gap-3">
-                    <button class="btn btn-custom px-4 py-2 text-blue">Thêm vào giỏ hàng</button>
+                    <button class="btn btn-custom px-4 py-2 text-blue add-to-cart "
+                            data-book-id="{{ title_book.id }}"
+                            data-book-price="{{ title_book.price }}">
+                        Thêm vào giỏ hàng
+                    </button>
                 </div>
                 <div class="d-flex gap-5 mt-4">
                     <span><strong>Số trang:</strong> {{ title_book.pages }} trang</span>
@@ -81,7 +85,11 @@
                             endif %}
                             {% endfor %}
                         </p>
-                        <button class="btn btn-primary btn-custom fs12 text-blue">Thêm vào giỏ hàng</button>
+                        <button class="btn btn-custom fs12 text-blue add-to-cart"
+                                data-book-id="{{ book.id }}"
+                                data-book-price="{{ book.price }}">
+                            Thêm vào giỏ hàng
+                        </button>
                     </div>
                 </div>
             </div>
@@ -91,25 +99,54 @@
 </section>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const priceElements = document.querySelectorAll('.price');
-        priceElements.forEach(priceElement => {
-            const rawPrice = parseFloat(priceElement.getAttribute('data-price'));
-            if (!isNaN(rawPrice)) {
-                const formattedPrice = new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                    minimumFractionDigits: 0
-                }).format(rawPrice);
-                priceElement.textContent = formattedPrice;
-            }
-        });
-    });
     document.addEventListener('DOMContentLoaded', function () {
         var dropdowns = document.querySelectorAll('.dropdown-toggle');
-        dropdowns.forEach(function(dropdown) {
+        dropdowns.forEach(function (dropdown) {
             new mdb.Dropdown(dropdown);
         });
     });
+
+    //add to cart
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function () {
+                const bookId = this.getAttribute('data-book-id');
+                const bookPrice = this.getAttribute('data-book-price');
+                const quantity = 1;
+                const bookUnitPrice = bookPrice*quantity
+
+                const body = new URLSearchParams({
+                    quantity: quantity,
+                    unit_price: bookUnitPrice,
+                    book_id: bookId,
+                }).toString();
+
+                fetch('/cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: body
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Không thể thêm vào giỏ hàng!');
+                        }
+                    })
+                    .then(data => {
+                        alert(`Đã thêm sách "${bookId}" vào giỏ hàng!`);
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
+                    });
+            });
+        });
+    });
+
+
 </script>
+<script src="../static/javascript/format_currency.js"></script>
 {% endblock %}
