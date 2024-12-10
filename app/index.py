@@ -80,9 +80,13 @@ def cart():
                 'success': False,
                 'message': f'An error occurred: {str(e)}'
             }), 500
-    my_carts = dao.get_cart(current_user.id)
-    total_prirce = dao.get_total_price(my_carts)
-    return render_template('cart.html', carts=my_carts, total_prirce=total_prirce)
+    if current_user.is_authenticated:
+        my_carts = dao.get_cart(current_user.id)
+        total_price = 0
+        if my_carts:
+            total_price = dao.get_total_price(my_carts)
+        return render_template('cart.html', carts=my_carts, total_price=total_price)
+    return redirect(url_for('login'))
 
 @app.route('/delete/cart/<int:id>', methods=['DELETE'])
 def delete_cart_detail(id):
