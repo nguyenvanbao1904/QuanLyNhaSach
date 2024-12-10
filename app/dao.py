@@ -67,7 +67,7 @@ def create_order_cart(**kwargs):
 
 def get_total_price(cart):
     rs = 0
-    for cart_detail in cart.other_details:
+    for cart_detail in cart.order_details:
         rs += cart_detail.unit_price
     return rs
 

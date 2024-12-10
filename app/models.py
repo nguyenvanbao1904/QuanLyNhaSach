@@ -27,8 +27,8 @@ class User(Item, UserMixin):
 
     account_role = db.Column(db.Enum(AccountRole), nullable=False, default=AccountRole.KhachHang)
     book_receipts = db.relationship('BookReceipt', backref='user', lazy=True)
-    buy_others = db.relationship('Order', backref='customer', lazy=True, foreign_keys='Order.customer_id')
-    sell_others = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.employee_id')
+    buy_orders = db.relationship('Order', backref='customer', lazy=True, foreign_keys='Order.customer_id')
+    sell_orders = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.employee_id')
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name
@@ -99,7 +99,7 @@ class OrderStatus(enum.Enum):
 class Order(Item):
     customer_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=True)
-    other_details = db.relationship('OrderDetail', backref='order', lazy=True, cascade='all,delete')
+    order_details = db.relationship('OrderDetail', backref='order', lazy=True, cascade='all,delete')
     order_status = db.Column(db.Enum(OrderStatus), nullable=False, default=OrderStatus.DONE)
 
 

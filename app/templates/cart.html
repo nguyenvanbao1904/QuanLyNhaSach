@@ -7,9 +7,9 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title text-blue fs-1 fst-italic fw-bold">Giỏ Hàng</h5>
-                {%if carts.other_details%}
+                {%if carts.order_details%}
                 <!-- Cart item -->
-                {%for cart in carts.other_details%}
+                {%for cart in carts.order_details%}
                 <div class="row mb-4">
                     <div class="col-3 d-flex align-items-center justify-content-center">
                         <img src={{cart.book.image}} class="img-fluid rounded" alt="Product Image" style="width: 150px">
@@ -73,7 +73,6 @@
                 })
                     .then(response => {
                         if (response.ok || response.status === 204) { // Kiểm tra phản hồi thành công
-                            alert(`Đã xóa sách "${cart_detail_id}" khỏi giỏ hàng!`);
                             location.reload(); // Reload lại trang để cập nhật
                         } else {
                             throw new Error('Không thể xóa khỏi giỏ hàng!');
