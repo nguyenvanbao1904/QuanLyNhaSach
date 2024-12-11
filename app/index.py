@@ -70,6 +70,7 @@ def cart():
             my_cart = dao.create_cart(current_user.id)
             dic = request.form.to_dict()
             dic['order_id'] = my_cart.id
+            print(dic)
             dao.create_order_cart(**dic)
             return jsonify({
                 'success': True,
@@ -98,6 +99,14 @@ def delete_cart_detail(id):
             'success': False,
             'message': f'An error occurred: {str(e)}'
         }), 500
+
+@app.route('/products/<int:id>', methods=['GET'])
+def products_detail(id):
+    book = dao.get_book_detail(id)
+    if book:
+        return render_template('products_detail.html', book=book)
+    else:
+        return redirect(url_for('home'))
 
 @login_manager.user_loader
 def load_user(user_id):

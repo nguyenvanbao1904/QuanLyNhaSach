@@ -23,7 +23,7 @@
 
             <div class="col-md-6 d-flex justify-content-center align-items-center">
                 <div class="book-card">
-                    <a href="#!" class="ripple" data-mdb-ripple-color="light">
+                    <a href=/products/{{title_book.id}} class="ripple" data-mdb-ripple-color="light">
                         <img
                                 alt="{{ title_book.name }}"
                                 class="img-fluid rounded"
@@ -64,12 +64,15 @@
             {% for book in books %}
             <div class="col-md-6 mb-4 d-flex mt-5">
                 <div class="col-6 d-flex flex-column justify-content-between" style="max-width: 40%">
-                    <img
-                            src="{{ book.image }}"
-                            class="img-fluid rounded shadow-lg"
-                            alt="{{ book.name }}"
-                            style="max-width: 100%;"
-                    />
+                    <a href=/products/{{book.id}} class="ripple" data-mdb-ripple-color="light">
+                        <img
+                                src="{{ book.image }}"
+                                class="img-fluid rounded shadow-lg"
+                                alt="{{ book.name }}"
+                                style="max-width: 100%;"
+                        />
+                    </a>
+
                 </div>
 
                 <div class="col-6">
@@ -105,48 +108,7 @@
             new mdb.Dropdown(dropdown);
         });
     });
-
-    //add to cart
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.add-to-cart').forEach(button => {
-            button.addEventListener('click', function () {
-                const bookId = this.getAttribute('data-book-id');
-                const bookPrice = this.getAttribute('data-book-price');
-                const quantity = 1;
-                const bookUnitPrice = bookPrice*quantity
-
-                const body = new URLSearchParams({
-                    quantity: quantity,
-                    unit_price: bookUnitPrice,
-                    book_id: bookId,
-                }).toString();
-
-                fetch('/cart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: body
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('Không thể thêm vào giỏ hàng!');
-                        }
-                    })
-                    .then(data => {
-                        alert(`Đã thêm sách "${bookId}" vào giỏ hàng!`);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
-                    });
-            });
-        });
-    });
-
-
 </script>
 <script src="../static/javascript/format_currency.js"></script>
+<script src="../static/javascript/add_products_to_cart.js"></script>
 {% endblock %}

@@ -76,3 +76,6 @@ def delete_cart_detail(id, user_id):
     if o:
         db.session.delete(o)
         db.session.commit()
+
+def get_book_detail(id):
+    return Book.query.get(id)

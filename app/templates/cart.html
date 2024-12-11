@@ -72,8 +72,8 @@
                     }
                 })
                     .then(response => {
-                        if (response.ok || response.status === 204) { // Kiểm tra phản hồi thành công
-                            location.reload(); // Reload lại trang để cập nhật
+                        if (response.ok || response.status === 204) {
+                            location.reload();
                         } else {
                             throw new Error('Không thể xóa khỏi giỏ hàng!');
                         }
