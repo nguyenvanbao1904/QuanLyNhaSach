@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(data => {
                     alert(`Đã thêm sách "${bookId}" vào giỏ hàng!`);
+                    location.reload()
                 })
                 .catch(error => {
                     console.error(error);

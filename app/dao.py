@@ -80,5 +80,12 @@ def update_cart_detail(cart_id, new_quantity):
     o.quantity = new_quantity
     db.session.commit()
 
+def get_cart_total_quantity(user_id):
+    cart = create_cart(user_id)
+    rs = 0
+    for cart_detail in cart.order_details:
+        rs += cart_detail.quantity
+    return rs
+
 def get_book_detail(id):
     return Book.query.get(id)

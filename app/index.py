@@ -4,6 +4,12 @@ from app import app, login_manager, dao
 from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 
+@app.context_processor
+def inject_cart_quantity():
+    if current_user.is_authenticated:
+        cart_total_quantity = dao.get_cart_total_quantity(current_user.id)
+        return {'cart_total_quantity': cart_total_quantity}
+    return {'cart_total_quantity': 0}
 @app.route('/')
 def home():
     genre = request.args.get('genre')

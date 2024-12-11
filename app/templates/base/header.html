@@ -37,8 +37,11 @@
             {% if current_user.avatar%}
             <img src={{current_user.avatar}} class="rounded-circle shadow-4 ms-3" style="width: 40px" alt="Avatar"/>
             {% endif %}
-            <a href="/cart" class="ms-3"><i class="fas fa-cart-shopping"></i></a>
-            <a href="{{ url_for('logout') }}" class="btn btn-primary ms-3 btn-custom fs12 text-blue">Đăng xuất</a>
+            <div class="position-relative">
+                <a href="/cart" class="ms-3"><i class="fas fa-cart-shopping fs-4"></i></a>
+                <div class="cart-quantity-badge">{{cart_total_quantity}}</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-primary ms-4 btn-custom fs12 text-blue">Đăng xuất</a>
             {% else %}
             <a href="{{ url_for('login') }}" class="btn btn-primary btn-custom fs12 text-blue">Đăng nhập</a>
             <a href="{{ url_for('signup') }}" class="btn btn-primary ms-3 btn-custom fs12 text-blue">Đăng ký</a>
