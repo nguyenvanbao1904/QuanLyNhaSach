@@ -39,7 +39,7 @@
                 <div class="row">
                     <div class="col-3">
                         <div class="form-outline" data-mdb-input-init>
-                            <input type="number" id="typeNumber" class="form-control fs-5" value="1"/>
+                            <input type="number" id="typeNumber" class="form-control fs-5" value="1" min="1"/>
                         </div>
                     </div>
                     <div class="col-9">
@@ -59,21 +59,6 @@
         </div>
     </div>
 </div>
-<!--<script>-->
-<!--    const quantityInput = document.getElementById('typeNumber');-->
-<!--    const addToCartButton = document.getElementById('addToCartButton');-->
-
-<!--    quantityInput.addEventListener('input', function () {-->
-<!--        let quantityValue = quantityInput.value;-->
-
-<!--        if (quantityValue < 1) {-->
-<!--            quantityValue = 1;-->
-<!--            quantityInput.value = 1;-->
-<!--        }-->
-
-<!--        addToCartButton.setAttribute('data-book-quantity', quantityValue);-->
-<!--    });-->
-<!--</script>-->
 <script src="../static/javascript/add_products_to_cart.js"></script>
 <script src="../static/javascript/format_currency.js"></script>
 {%endblock%}

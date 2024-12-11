@@ -61,8 +61,6 @@ def create_order_cart(**kwargs):
         db.session.add(o)
     else:
         current_order.quantity += int(o.quantity)
-        current_order.unit_price += int(o.unit_price) * int(o.quantity)
-        print(current_order.quantity)
     db.session.commit()
 
 def get_total_price(cart):
@@ -76,6 +74,11 @@ def delete_cart_detail(id, user_id):
     if o:
         db.session.delete(o)
         db.session.commit()
+
+def update_cart_detail(cart_id, new_quantity):
+    o = OrderDetail.query.filter_by(id=cart_id).first()
+    o.quantity = new_quantity
+    db.session.commit()
 
 def get_book_detail(id):
     return Book.query.get(id)

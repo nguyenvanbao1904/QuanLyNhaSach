@@ -108,6 +108,26 @@ def products_detail(id):
     else:
         return redirect(url_for('home'))
 
+@login_required
+@app.route('/update-cart', methods=['PATCH'])
+def update_cart():
+    data = request.get_json()
+    cart_detail_id = data.get("cart_detail_id")
+    quantity = data.get("quantity")
+    print(cart_detail_id)
+    print(quantity)
+    try:
+        dao.update_cart_detail(cart_detail_id, quantity)
+        return jsonify({
+            'success': True,
+            'message': 'Item update successfully'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }), 500
+
 @login_manager.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)

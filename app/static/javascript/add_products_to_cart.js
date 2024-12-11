@@ -9,11 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isNaN(quantity) || quantity < 1) {
                 quantity = 1;
             }
-            const bookUnitPrice = bookPrice * quantity
 
             const body = new URLSearchParams({
                 quantity: quantity,
-                unit_price: bookUnitPrice,
                 book_id: bookId,
             }).toString();
 

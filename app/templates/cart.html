@@ -26,15 +26,27 @@
                     </div>
                     <div class="col-3 d-flex align-items-center justify-content-center flex-column">
                         <p class="fw-bold text-danger fs-4 text-yellow price" data-price="{{cart.book.price}}"></p>
-                        <p class="text-muted">Số lượng: {{cart.quantity}}</p>
-                        <button class="btn btn-custom delete-cart-detail" cart_detail_id="{{cart.id}}"
-                                style="font-size: 10px">Xóa
-                        </button>
+                        <div class="d-flex align-items-center justify-content-around">
+                            <p class="text-muted">Số lượng: </p>
+                            <div class="form-outline" data-mdb-input-init style="width: 25%">
+                                <input
+                                        type="number"
+                                        id="typeNumber"
+                                        class="form-control fs-5"
+                                        value={{cart.quantity}}
+                                        cart_detail_id={{cart.id}}
+                                        min="1"
+                                        />
+                            </div>
+                            <button class="btn btn-custom delete-cart-detail" cart_detail_id="{{cart.id}}"
+                                    style="font-size: 10px">Xóa
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {%endfor%}
 
-                 <!-- Total price and actions -->
+                <!-- Total price and actions -->
                 <hr>
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between">
@@ -52,7 +64,6 @@
                 {%endif%}
 
 
-
             </div>
         </div>
     </div>
@@ -60,32 +71,63 @@
 {%else%}
 <h1>Bạn cần đăng nhập để tiếp tục</h1>
 {%endif%}
+<script src="../static/javascript/delete_cart_detail.js"></script>
+<script src="../static/javascript/format_currency.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.delete-cart-detail').forEach(button => {
-            button.addEventListener('click', function () {
-                const cart_detail_id = this.getAttribute("cart_detail_id");
-                fetch(`/delete/cart/${cart_detail_id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+        const quantityInputs = document.querySelectorAll('#typeNumber');
+        let debounceTimer;
+
+        quantityInputs.forEach(input => {
+            input.addEventListener('input', function (event) {
+                const quantityInput = event.target;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const newQuantity = parseInt(quantityInput.value);
+
+                    if (isNaN(newQuantity) || newQuantity < 1) {
+                        quantityInput.value = 1;
                     }
-                })
-                    .then(response => {
-                        if (response.ok || response.status === 204) {
-                            location.reload();
-                        } else {
-                            throw new Error('Không thể xóa khỏi giỏ hàng!');
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Có lỗi xảy ra khi xóa khỏi giỏ hàng.');
-                    });
+
+                    mychange(quantityInput);
+                }, 500);
             });
         });
     });
 
+    // Hàm mychange để xử lý khi giá trị quantity thay đổi
+    function mychange(inputElement) {
+        const newQuantity = parseInt(inputElement.value);
+        const cartDetailId = inputElement.getAttribute('cart_detail_id');
+
+        console.log(`Số lượng mới: ${newQuantity}, cart_detail_id: ${cartDetailId}`);
+
+        fetch('/update-cart', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cart_detail_id: cartDetailId,
+                quantity: newQuantity,
+            }),
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Không thể cập nhật giỏ hàng!');
+                }
+            })
+            .then(data => {
+                console.log(data.message);
+                location.reload();
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Có lỗi xảy ra khi cập nhật giỏ hàng.');
+            });
+    }
 </script>
-<script src="../static/javascript/format_currency.js"></script>
+
 {%endblock%}
