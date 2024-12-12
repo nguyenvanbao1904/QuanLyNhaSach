@@ -7,6 +7,7 @@ cryptography==44.0.0
 Flask==3.0.3
 -e git+https://github.com/pallets-eco/flask-admin.git@1a18428e1408dd2328dbe5441730bd3ab290fa1f#egg=Flask_Admin
 Flask-Login==0.6.3
+Flask-Migrate==4.0.7
 Flask-SQLAlchemy==3.1.1
 greenlet==3.1.1
 itsdangerous==2.2.0
