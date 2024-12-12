@@ -92,6 +92,9 @@ def get_cart_total_quantity(user_id):
 def get_book_detail(id):
     return Book.query.get(id)
 
+def get_order_by_id(order_id):
+    return Order.query.get(order_id)
+
 def change_status_order(order, new_created_date, order_status):
     o = Order.query.filter_by(id=order.id, order_status=order.order_status).first()
     o.order_status = order_status

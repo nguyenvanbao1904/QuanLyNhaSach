@@ -1,9 +1,10 @@
 import random
 from datetime import datetime, timedelta
 
-from app import app, login_manager, dao, OrderStatus
+from app import app, login_manager, dao, OrderStatus, redis_client
 from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
+from redis_tasks import redis_utils
 
 @app.context_processor
 def inject_cart_quantity():
@@ -77,7 +78,6 @@ def cart():
             my_cart = dao.create_cart(current_user.id)
             dic = request.form.to_dict()
             dic['order_id'] = my_cart.id
-            print(dic)
             dao.create_order_cart(**dic)
             return jsonify({
                 'success': True,
@@ -158,8 +158,9 @@ def checkout_offline():
             return redirect(url_for('not_found_page'))
         total_price = dao.get_total_price(carts)
         carts.create_date = datetime.now()
-        deadline = carts.create_date + timedelta(days=2)
+        deadline = carts.create_date + timedelta(minutes=2)
         dao.change_status_order(carts, carts.create_date, OrderStatus.PROCESSING)
+        redis_utils.set_ttl_order(order_id, 10, "PROCESSING")
         return render_template('/checkout_templates/checkout_offline.html', order_id=int(order_id), total_price=total_price, deadline=deadline)
 
 

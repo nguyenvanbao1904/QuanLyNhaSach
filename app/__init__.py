@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
+import redis
+from threading import Thread
+from redis_tasks import pubsub_worker
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:12345678@localhost/quanlynhasach?charset=utf8mb4"
@@ -16,3 +18,7 @@ login_manager.init_app(app)
 migrate = Migrate(app, db)
 
 from .models import *
+
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+worker_thread = Thread(target=pubsub_worker.handle_order_expiration, daemon=True)
+worker_thread.start()
