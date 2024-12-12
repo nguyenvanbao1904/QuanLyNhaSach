@@ -1,6 +1,7 @@
 import random
+from datetime import datetime, timedelta
 
-from app import app, login_manager, dao
+from app import app, login_manager, dao, OrderStatus
 from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 
@@ -133,6 +134,35 @@ def update_cart():
             'success': False,
             'message': f'An error occurred: {str(e)}'
         }), 500
+
+@app.route('/checkout', methods=['GET'])
+def checkout():
+    if current_user.is_authenticated:
+        order_id = request.args.get('order_id')
+        carts = dao.get_cart_by_id(current_user.id, order_id)
+        if carts is None:
+            return redirect(url_for('not_found_page'))
+        total_price = 0
+        if carts:
+            total_price = dao.get_total_price(carts)
+        return render_template('checkout_templates/checkout.html', carts=carts, total_price=total_price)
+    return redirect(url_for('login'))
+
+@app.route('/checkout/offline', methods=['GET','POST'])
+def checkout_offline():
+    if current_user.is_authenticated:
+        order_id = request.args.get('order_id')
+
+        carts = dao.get_cart_by_id(current_user.id, order_id)
+        if carts is None:
+            return redirect(url_for('not_found_page'))
+        total_price = dao.get_total_price(carts)
+        carts.create_date = datetime.now()
+        deadline = carts.create_date + timedelta(days=2)
+        dao.change_status_order(carts, carts.create_date, OrderStatus.PROCESSING)
+        return render_template('/checkout_templates/checkout_offline.html', order_id=int(order_id), total_price=total_price, deadline=deadline)
+
+
 
 @login_manager.user_loader
 def load_user(user_id):

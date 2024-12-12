@@ -45,6 +45,8 @@ def get_book_by_genre(genre_name):
 def get_cart(user_id):
     return Order.query.filter_by(customer_id=user_id, order_status=OrderStatus.PENDING).first()
 
+def get_cart_by_id(user_id, cart_id):
+    return Order.query.filter_by(customer_id=user_id, order_status=OrderStatus.PENDING, id=cart_id).first()
 
 def create_cart(user_id):
     cart = get_cart(user_id)
@@ -89,3 +91,9 @@ def get_cart_total_quantity(user_id):
 
 def get_book_detail(id):
     return Book.query.get(id)
+
+def change_status_order(order, new_created_date, order_status):
+    o = Order.query.filter_by(id=order.id, order_status=order.order_status).first()
+    o.order_status = order_status
+    o.created_date = new_created_date
+    db.session.commit()
