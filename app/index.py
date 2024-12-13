@@ -5,6 +5,7 @@ from app import app, login_manager, dao, OrderStatus, redis_client
 from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from redis_tasks import redis_utils
+from decorator import role_required
 
 
 @app.context_processor
@@ -50,11 +51,11 @@ def login():
 
 
 @app.route("/logout")
-@login_required
+@role_required("khachHang")
 def logout():
+    print(1)
     logout_user()
     return redirect('/')
-
 
 @app.route("/signup", methods=["get", "post"])
 def signup():
@@ -179,7 +180,7 @@ def checkout_offline():
 
 @app.route('/checkout/online', methods=['GET'])
 def checkout_online():
-    return checkout_method("online", 30)
+    return checkout_method("online", 60)
 
 
 @app.route('/checkout/confirm', methods=['POST'])
