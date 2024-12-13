@@ -148,8 +148,7 @@ def checkout():
         return render_template('checkout_templates/checkout.html', carts=carts, total_price=total_price)
     return redirect(url_for('login'))
 
-@app.route('/checkout/offline', methods=['GET','POST'])
-def checkout_offline():
+def checkout_method(method, current_user, ttl):
     if current_user.is_authenticated:
         order_id = request.args.get('order_id')
 
@@ -158,12 +157,32 @@ def checkout_offline():
             return redirect(url_for('not_found_page'))
         total_price = dao.get_total_price(carts)
         carts.create_date = datetime.now()
-        deadline = carts.create_date + timedelta(minutes=2)
+        deadline = carts.create_date + timedelta(seconds=ttl)
         dao.change_status_order(carts, carts.create_date, OrderStatus.PROCESSING)
-        redis_utils.set_ttl_order(order_id, 10, "PROCESSING")
-        return render_template('/checkout_templates/checkout_offline.html', order_id=int(order_id), total_price=total_price, deadline=deadline)
+        redis_utils.set_ttl_order(order_id, ttl, "PROCESSING")
+        return render_template(f'/checkout_templates/checkout_{method}.html', order_id=int(order_id),
+                               total_price=total_price, deadline=deadline)
 
+@app.route('/checkout/offline', methods=['GET'])
+def checkout_offline():
+    return checkout_method("offline", current_user, 10)
 
+@app.route('/checkout/online', methods=['GET'])
+def checkout_online():
+    return checkout_method("online", current_user, 30)
+
+@app.route('/checkout/confirm', methods=['POST'])
+def checkout_confirm():
+    if current_user.is_authenticated:
+        data = request.get_json()
+        order_id = data.get("order_id")
+        cart = dao.get_order_by_id(order_id, current_user.id)
+        if cart is None:
+            return jsonify({'success': False, 'message': 'cart is none'})
+        dao.change_status_order(cart, cart.create_date, OrderStatus.DONE)
+        redis_client.delete(order_id)
+        return jsonify({'success': True, 'message': 'Checkout done'})
+    return jsonify({'success': False, 'message': 'Please login'})
 
 @login_manager.user_loader
 def load_user(user_id):
