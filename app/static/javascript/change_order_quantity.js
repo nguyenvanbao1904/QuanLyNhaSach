@@ -23,15 +23,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const newQuantity = parseInt(inputElement.value);
         const cartDetailId = inputElement.getAttribute('cart_detail_id');
 
-        console.log(`Số lượng mới: ${newQuantity}, cart_detail_id: ${cartDetailId}`);
-
         fetch('/update-cart', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                cart_detail_id: cartDetailId,
+                product_in_cart_id: cartDetailId,
                 quantity: newQuantity,
             }),
         })
