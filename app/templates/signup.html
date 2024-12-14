@@ -5,7 +5,7 @@
     <div class="container vh-100 d-flex justify-content-center align-items-center bg-blue">
         <div class="col-lg-6 col-md-8 col-sm-12 shadow p-5 rounded">
             <h3 class="text-center mb-4">Đăng ký tài khoản mới</h3>
-            <form action="/signup" method="POST">
+            <form action="/signup" method="POST" enctype="multipart/form-data">
                 <!-- Username -->
                 <div class="mb-3">
                     <label for="username" class="form-label">Tên đăng nhập</label>
@@ -39,6 +39,12 @@
                     <label for="last_name" class="form-label">Họ của bạn</label>
                     <input type="text" id="last_name" class="form-control" name="last_name"
                            placeholder="Nhập họ của bạn" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="last_name" class="form-label">Tải lên avatar của bạn</label>
+                    <input type="file" id="avatar" class="form-control" name="avatar"
+                           accept="image/jpeg, image/png, image/gif">
                 </div>
 
                 <!-- Submit Button -->

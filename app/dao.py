@@ -12,10 +12,10 @@ def check_login(username, password):
     except Exception as e:
         return None
 
-def add_user(username, password, first_name, last_name):
+def add_user(username, password, first_name, last_name, avatar):
     try:
         user = User(username=username, password=str(hashlib.md5(password.strip().encode("utf-8")).hexdigest()),
-                    first_name=first_name, last_name=last_name)
+                    first_name=first_name, last_name=last_name, avatar=avatar)
         db.session.add(user)
         db.session.commit()
         return user

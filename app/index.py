@@ -6,6 +6,8 @@ from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
 from app.decorator import role_required
+import cloudinary
+import cloudinary.uploader
 
 
 @app.context_processor
@@ -71,16 +73,28 @@ def signup():
         password_confirm = request.form.get("password_confirm")
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
+        avatar_url = None
         if password.strip() != password_confirm.strip():
             err_msg = "Passwords don't match!"
         else:
-            if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name):
+            print(request.files)
+            if 'avatar' in request.files and request.files['avatar'].filename != '':
+                avatar_file = request.files['avatar']
+                try:
+                    upload_result = cloudinary.uploader.upload(avatar_file)
+                    print(upload_result)
+                    avatar_url = upload_result['secure_url']
+                except Exception as e:
+                    print(avatar_url)
+                    err_msg = f"Avatar upload failed: {str(e)}"
+                    return render_template("signup.html", err_msg=err_msg)
+
+            if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name, avatar=avatar_url):
                 return redirect(url_for("login"))
             else:
                 err_msg = "Something Wrong!!!"
 
     return render_template("signup.html", err_msg=err_msg)
-
 
 @app.route('/cart', methods=['GET', 'POST'])
 @role_required(['khachHang'])
