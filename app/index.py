@@ -1,16 +1,16 @@
 import random
 from datetime import datetime, timedelta
 
-from app import app, login_manager, dao, OrderStatus, redis_client
+from app import app, login_manager, dao, OrderStatus, redis_client, models
 from flask import render_template, redirect, url_for, request, session, jsonify
-from flask_login import login_user, login_required, logout_user, current_user
+from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
 from decorator import role_required
 
 
 @app.context_processor
 def inject_cart_quantity():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and current_user.account_role == models.AccountRole.KhachHang:
         cart_total_quantity = dao.get_cart_total_quantity(current_user.id)
         return {'cart_total_quantity': cart_total_quantity}
     return {'cart_total_quantity': 0}
@@ -43,7 +43,10 @@ def login():
         user = dao.check_login(username=username, password=password)
         if user:
             login_user(user=user)
-            return redirect(url_for('home'))
+            if user.account_role == models.AccountRole.KhachHang:
+                return redirect(url_for('home'))
+            elif user.account_role == models.AccountRole.NhanVien:
+                return redirect(url_for('staff'))
         else:
             err_msg = "Something wrong!!!"
 
@@ -51,7 +54,7 @@ def login():
 
 
 @app.route("/logout")
-@role_required(['khachHang'])
+@role_required(['khachHang', 'nhanVien'])
 def logout():
     logout_user()
     return redirect('/')
@@ -175,7 +178,7 @@ def checkout_method(method, ttl):
 @app.route('/checkout/offline', methods=['GET'])
 @role_required(['khachHang'])
 def checkout_offline():
-    return checkout_method("offline", 10)
+    return checkout_method("offline", 60)
 
 
 @app.route('/checkout/online', methods=['GET'])
@@ -185,15 +188,19 @@ def checkout_online():
 
 
 @app.route('/checkout/confirm', methods=['POST'])
-@role_required(['khachHang'])
+@role_required(['khachHang', 'nhanVien'])
 def checkout_confirm():
     data = request.get_json()
     order_id = data.get("order_id")
-    order = dao.get_order_by_id(order_id, current_user.id)
+    order = None
+    if current_user.account_role == models.AccountRole.KhachHang:
+        order = dao.get_order_by_id(order_id, current_user.id)
+    elif current_user.account_role == models.AccountRole.NhanVien:
+        order = dao.get_order_by_id(order_id)
     if order is None:
         return jsonify({'success': False, 'message': 'order not found'})
     dao.change_status_order(order, order.create_date, OrderStatus.DONE)
-    redis_client.delete(order_id)
+    redis_client.delete(int(order_id))
     return jsonify({'success': True, 'message': 'Checkout done'})
 
 
@@ -201,6 +208,35 @@ def checkout_confirm():
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
 
+
+# staff
+
+@app.route('/staff', methods=['GET'])
+@role_required(['nhanVien'])
+def staff():
+    return render_template('/staff/staff.html')
+
+@app.route("/staff/receive-online-order", methods=['GET'])
+@role_required(['nhanVien'])
+def receive_online_order():
+    return render_template("/staff/receive_online_order.html")
+
+@app.route('/staff/receive-online-order/find_order', methods=['POST'])
+@role_required(['nhanVien'])
+def receive_online_get_order():
+    data = request.get_json()
+    order_id = data.get("order_id")
+    order = dao.get_order_by_id(order_id)
+    if order:
+        return jsonify({'success': True, 'order': {
+            'first_name': order.customer.first_name,
+            'last_name': order.customer.last_name,
+            'total_price': dao.get_total_price(order),
+            'phone_number': order.customer.phone_number,
+            'order_status': order.order_status.value
+            }
+        })
+    return jsonify({'success': False, 'message': "order not found"} )
 if __name__ == '__main__':
     from app.admin import *
 
