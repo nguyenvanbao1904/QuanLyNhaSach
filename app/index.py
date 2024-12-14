@@ -5,7 +5,7 @@ from app import app, login_manager, dao, OrderStatus, redis_client, models
 from flask import render_template, redirect, url_for, request, session, jsonify
 from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
-from decorator import role_required
+from app.decorator import role_required
 
 
 @app.context_processor
