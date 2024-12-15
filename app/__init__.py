@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import redis
 from threading import Thread
-from redis_tasks import pubsub_worker
+from app.redis_tasks import pubsub_worker
 from dotenv import load_dotenv
 import cloudinary
 import os
@@ -22,13 +22,13 @@ migrate = Migrate(app, db)
 
 from .models import *
 
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-worker_thread = Thread(target=pubsub_worker.handle_order_expiration, daemon=True)
-worker_thread.start()
-
 #cloudinary
 load_dotenv()
 cloudinary.config(
     cloud_name = os.getenv('CLOUD_NAME'),
     api_key=os.getenv('API_KEY'),
     api_secret=os.getenv('API_SECRET'))
+
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+worker_thread = Thread(target=pubsub_worker.handle_order_expiration, daemon=True)
+worker_thread.start()

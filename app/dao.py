@@ -1,7 +1,7 @@
 import hashlib
 
 from app import db, Genre, Order, OrderStatus
-from app.models import User, Book, OrderDetail
+from app.models import User, Book, OrderDetail, AccountRole
 
 
 def check_login(username, password):
@@ -26,7 +26,7 @@ def add_user(username, password, first_name, last_name, avatar):
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
-def get_all_book(orderby):
+def get_all_book(orderby = None):
     if orderby:
         if orderby == "o1":
             return Book.query.order_by(Book.price.asc()).all()
@@ -96,3 +96,6 @@ def change_status_order(order, new_created_date, order_status):
     o.order_status = order_status
     o.created_date = new_created_date
     db.session.commit()
+
+def find_customer_by_email(email):
+    return User.query.filter_by(email=email,account_role=AccountRole.KhachHang ).first()

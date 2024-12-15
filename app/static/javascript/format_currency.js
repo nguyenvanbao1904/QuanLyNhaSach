@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceElements = document.querySelectorAll('.price');
     priceElements.forEach(priceElement => {
         const rawPrice = parseFloat(priceElement.getAttribute('data-price'));
-        console.log(priceElement.getAttribute('data-price'))
         if (!isNaN(rawPrice)) {
             // Format số với dấu phân cách hàng nghìn
             const formattedPrice = new Intl.NumberFormat('vi-VN', {

@@ -10,4 +10,6 @@ def handle_order_expiration():
             if message['type'] == 'pmessage':
                 expired_key = message['data']
                 order = dao.get_order_by_id(expired_key)
+                print(expired_key)
+                print(order)
                 dao.change_status_order(order, order.create_date, models.OrderStatus.FAILED)

@@ -36,6 +36,22 @@ class User(Item, UserMixin):
     def get_id(self):
         return str(self.id)
 
+    def to_dic(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "phone_number": self.phone_number,
+            "is_active": self.is_active,
+            "avatar": self.avatar,
+            "account_role": self.account_role.name if self.account_role else None,
+            "book_receipts": [receipt.id for receipt in self.book_receipts] if self.book_receipts else [],
+            "buy_orders": [order.id for order in self.buy_orders] if self.buy_orders else [],
+            "sell_orders": [order.id for order in self.sell_orders] if self.sell_orders else []
+        }
+
 Book_Author = db.Table('book_author',
                        db.Column('author_id', db.Integer, db.ForeignKey('author.id'), primary_key=True),
                        db.Column('book_id', db.Integer, db.ForeignKey('book.id'), primary_key=True))
@@ -97,7 +113,7 @@ class OrderStatus(enum.Enum):
     PENDING = 'pending'
 
 class Order(Item):
-    customer_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=True)
     employee_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=True)
     order_details = db.relationship('OrderDetail', backref='order', lazy=True, cascade='all,delete')
     order_status = db.Column(db.Enum(OrderStatus), nullable=False, default=OrderStatus.DONE)

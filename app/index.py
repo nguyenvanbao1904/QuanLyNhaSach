@@ -2,7 +2,7 @@ import random
 from datetime import datetime, timedelta
 
 from app import app, login_manager, dao, OrderStatus, redis_client, models
-from flask import render_template, redirect, url_for, request, session, jsonify
+from flask import render_template, redirect, url_for, request, session, jsonify, json
 from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
 from app.decorator import role_required
@@ -251,6 +251,44 @@ def receive_online_get_order():
             }
         })
     return jsonify({'success': False, 'message': "order not found"} )
+
+@app.route('/staff/sell-book', methods=['GET'])
+@role_required(['nhanVien'])
+def sell_book():
+    books = dao.get_all_book()
+    return render_template('/staff/sell_book.html', books=books)
+
+@app.route('/staff/sell-book/find-customer-by-email', methods=['POST'])
+@role_required(['nhanVien'])
+def find_customer_email():
+    data = request.get_json()
+    email = data.get('email')
+    user = dao.find_customer_by_email(email)
+    if user is None:
+        return jsonify({'success': False, 'message': 'email not found'})
+    return jsonify({'success': True, 'user': user.to_dic()})
+
+@app.route('/staff/sell-book/checkout', methods=['POST'])
+@role_required(['nhanVien'])
+def staff_checkout():
+    data = request.get_json()
+    customer_id = data.get('customer_id')
+    seller_id = data.get('seller_id')
+    order = Order(customer_id=customer_id, employee_id=seller_id, order_status=OrderStatus.DONE)
+
+    order_details = data.get('order_details')
+    if order_details is None:
+        return jsonify({'success': False, 'message': 'order not found'})
+    ods = []
+    order_details = json.loads(order_details)
+    for order_detail in order_details:
+        od = OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'))
+        ods.append(od)
+    order.order_details = ods
+    db.session.add(order)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Checkout done'})
+
 if __name__ == '__main__':
     from app.admin import *
 
