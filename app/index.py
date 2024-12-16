@@ -49,6 +49,8 @@ def login():
                 return redirect(url_for('home'))
             elif user.account_role == models.AccountRole.NhanVien:
                 return redirect(url_for('staff'))
+            elif user.account_role == models.AccountRole.QuanLyKho:
+                return redirect(url_for('store_manager'))
         else:
             err_msg = "Something wrong!!!"
 
@@ -77,7 +79,6 @@ def signup():
         if password.strip() != password_confirm.strip():
             err_msg = "Passwords don't match!"
         else:
-            print(request.files)
             if 'avatar' in request.files and request.files['avatar'].filename != '':
                 avatar_file = request.files['avatar']
                 try:
@@ -288,6 +289,72 @@ def staff_checkout():
     db.session.add(order)
     db.session.commit()
     return jsonify({'success': True, 'message': 'Checkout done'})
+
+
+# store manager
+
+@app.route('/store_manager', methods=['GET'])
+@role_required(['quanLyKho'])
+def store_manager():
+    books = dao.get_all_book()
+    genres = dao.get_all_genre()
+    authors = dao.get_all_author()
+    return render_template('/store_manager/store_manager.html', books=books, genres=genres, authors=authors)
+
+@app.route('/store_manager/add_genres', methods=['POST'])
+@role_required(['quanLyKho'])
+def add_genres():
+    try:
+        data = request.get_json()
+        for genre in data:
+            g = Genre(name=genre)
+            db.session.add(g)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Genres added'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Add genres failed'})
+
+@app.route('/store_manager/add_authors', methods=['POST'])
+@role_required(['quanLyKho'])
+def add_authors():
+    try:
+        data = request.get_json()
+        for author in data:
+            a = Author(name=author)
+            db.session.add(a)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Authors added'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Add authors failed'})
+
+@app.route('/store_manager/add_books', methods=['POST'])
+@role_required(['quanLyKho'])
+def add_books():
+   try:
+       books_data = json.loads(request.form['books'])
+       image_url = ""
+       index = 0
+       for book_data in books_data:
+           authors = dao.find_authors(book_data.get('authors'))
+           genres = dao.find_genres(book_data.get('genres'))
+           del book_data['authors']
+           del book_data['genres']
+           if request.files:
+               image_file = request.files[f'images[{index}]']
+               try:
+                   upload_result = cloudinary.uploader.upload(image_file)
+                   print(upload_result)
+                   image_url = upload_result['secure_url']
+               except Exception as e:
+                   err_msg = f"Avatar upload failed: {str(e)}"
+                   return jsonify({'success': False, 'message': 'Upload image failed'})
+           book = Book(**book_data, authors=authors, genres=genres, image=image_url)
+           db.session.add(book)
+           index += 1
+       db.session.commit()
+       return jsonify({'success': True, 'message': 'Books added'})
+   except Exception as e:
+       return jsonify({'success': False, 'message': 'Add books failed'})
 
 if __name__ == '__main__':
     from app.admin import *

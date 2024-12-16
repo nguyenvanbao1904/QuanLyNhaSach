@@ -1,0 +1,125 @@
+<h1 class="text-center text-primary mb-5">📦 NHẬP SÁCH VÀO KHO</h1>
+<!-- Biểu mẫu nhập sách -->
+<form id="book-import-form">
+    <table class="table table-bordered text-center align-middle">
+        <thead class="table-light">
+        <tr>
+            <th>STT</th>
+            <th>Tên sách</th>
+            <th>Thể loại</th>
+            <th>Tác giả</th>
+            <th>Số lượng</th>
+            <th>Xóa</th>
+        </tr>
+        </thead>
+        <tbody id="book-rows">
+        <!-- Row 1 -->
+        <tr>
+            <td>1</td>
+            <td>
+                <select class="form-select select2-enable" name="book_name" style="width: 100%;" required
+                        onchange="fillBookDetails(this)">
+                    <option value="">Nhập tên sách</option>
+                    {% for book in books %}
+                    <option value="{{ book.id }}" data-genre="{{ book.genres|join(', ') }}"
+                            data-author="{{ book.authors|join(', ') }}">{{
+                        book.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td><input type="text" class="form-control" name="genre" placeholder="Nhập thể loại" required readonly>
+            </td>
+            <td><input type="text" class="form-control" name="author" placeholder="Nhập tác giả" required readonly>
+            </td>
+            <td><input type="number" class="form-control" name="quantity" placeholder="0" min="150" required
+                       value="150"></td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">
+                    Xóa
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-secondary me-2" onclick="addBookInventoryRow()">➕ Thêm dòng</button>
+        <button type="submit" class="btn btn-primary">📥 Xác nhận nhập sách vào kho</button>
+    </div>
+</form>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Thêm dòng mới vào bảng nhập sách vào kho
+    function addBookInventoryRow() {
+        const tableBody = document.getElementById('book-rows');
+        const newRowIndex = tableBody.rows.length + 1;
+
+        // HTML cho dòng mới
+        const newRow = `
+    <tr>
+                <td>${newRowIndex}</td>
+                <td>
+                    <select class="form-select select-book" name="book_name" style="width: 100%;" required
+                            onchange="fillBookDetails(this)">
+                        <option value="">Nhập tên sách</option>
+                        {% for book in books %}
+                        <option value="{{ book.id }}" data-genre="{{ book.genres|join(', ') }}" data-author="{{ book.authors|join(', ') }}">{{
+                            book.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td><input type="text" class="form-control" name="genre" placeholder="Nhập thể loại" required readonly>
+                </td>
+                <td><input type="text" class="form-control" name="author" placeholder="Nhập tác giả" required readonly>
+                </td>
+                <td><input type="number" class="form-control" name="quantity" placeholder="0" min="150" required
+                           value="150"></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">
+                        Xóa
+                    </button>
+                </td>
+            </tr>`;
+
+        // Thêm dòng mới vào bảng
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+
+        // Khởi tạo lại Select2 cho tất cả các trường dropdown
+        initSelect2();
+    }
+
+    // Xử lý Submit Form
+    $('#book-import-form').on('submit', function (e) {
+        e.preventDefault();
+        let totalBooks = 0;
+
+        $('#book-rows tr').each(function () {
+            const quantity = $(this).find('input[name="quantity"]').val() || 0;
+            totalBooks += parseInt(quantity);
+        });
+
+        if (totalBooks < 150) {
+            alert("Số lượng sách nhập phải ít nhất 150 cuốn.");
+        } else {
+            alert("✅ Phiếu nhập sách đã được xác nhận!");
+        }
+    });
+
+    // tự động điền tác giả, thể loại khi chọn sách
+    function fillBookDetails(selectElement) {
+        // Lấy thông tin từ option được chọn
+        var selectedOption = selectElement.options[selectElement.selectedIndex];
+
+        // Lấy genre và author từ thuộc tính data
+        var genres = selectedOption.getAttribute('data-genre');
+        var authors = selectedOption.getAttribute('data-author');
+
+        // Điền thông tin vào các trường genre và author
+        var genreField = selectElement.closest('tr').querySelector('input[name="genre"]');
+        var authorField = selectElement.closest('tr').querySelector('input[name="author"]');
+
+        genreField.value = genres;
+        authorField.value = authors;
+    }
+</script>

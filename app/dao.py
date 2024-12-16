@@ -1,7 +1,7 @@
 import hashlib
 
 from app import db, Genre, Order, OrderStatus
-from app.models import User, Book, OrderDetail, AccountRole
+from app.models import User, Book, OrderDetail, AccountRole, Author
 
 
 def check_login(username, password):
@@ -99,3 +99,23 @@ def change_status_order(order, new_created_date, order_status):
 
 def find_customer_by_email(email):
     return User.query.filter_by(email=email,account_role=AccountRole.KhachHang ).first()
+
+def get_all_genre():
+    return Genre.query.all()
+
+def get_all_author():
+    return Author.query.all()
+
+def find_genres(genre_ids):
+    rs = []
+    for genre_id in genre_ids:
+        genre = Genre.query.get(genre_id)
+        rs.append(genre)
+    return rs
+
+def find_authors(authors):
+    rs = []
+    for author in authors:
+        author = Author.query.get(author)
+        rs.append(author)
+    return rs
