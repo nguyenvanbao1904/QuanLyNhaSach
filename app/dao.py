@@ -1,7 +1,8 @@
+import datetime
 import hashlib
 
-from app import db, Genre, Order, OrderStatus
-from app.models import User, Book, OrderDetail, AccountRole, Author
+from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory
+from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
 
 
 def check_login(username, password):
@@ -37,6 +38,9 @@ def get_all_book(orderby = None):
 
 def get_book_by_genre(genre_name):
     return Book.query.join(Book.genres).filter(Genre.name == genre_name).all()
+
+def get_book_by_id(book_id):
+    return Book.query.get(book_id)
 
 def get_cart_by_user_id(user_id):
     return Order.query.filter_by(customer_id=user_id, order_status=OrderStatus.PENDING).first()
@@ -119,3 +123,41 @@ def find_authors(authors):
         author = Author.query.get(author)
         rs.append(author)
     return rs
+
+def create_book_receipt(store_manager_id):
+    book_receipt = BookReceipt(user_id=store_manager_id)
+    db.session.add(book_receipt)
+    db.session.commit()
+    return book_receipt
+
+def create_book_receipt_detail(data, book_receipt):
+    book_receipt_detail = BookReceiptDetail(book=get_book_by_id(data['id']), quantity=data['quantity'],receipt=book_receipt)
+    db.session.add(book_receipt_detail)
+    db.session.commit()
+    return book_receipt_detail
+
+def get_book_in_inventory(book_id):
+    return BookInventory.query.filter_by(book_id=book_id).first()
+
+def check_inventory(data):
+    for item in data:
+        if item['quantity'] < 150:
+            return False
+        book = get_book_by_id(item['id'])
+        if book is None:
+            return False
+        book_in_inventory = get_book_in_inventory(book.id)
+        if book_in_inventory and book_in_inventory.current_quantity > 300:
+            return False
+    return True
+
+def import_into_inventory(book_receipt_detail):
+    tmp = get_book_in_inventory(book_receipt_detail.book_id)
+    if tmp:
+        tmp.current_quantity += book_receipt_detail.quantity
+        tmp.last_updated = datetime.datetime.now()
+        db.session.add(tmp)
+    else:
+        bookInventory = BookInventory(book_id=book_receipt_detail.book_id, current_quantity=book_receipt_detail.quantity)
+        db.session.add(bookInventory)
+    db.session.commit()

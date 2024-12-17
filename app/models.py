@@ -103,7 +103,7 @@ class BookReceiptDetail(db.Model):
 class BookInventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     current_quantity = db.Column(db.Integer, nullable=False)
-    last_updated = db.Column(db.DateTime, nullable=False)
+    last_updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
     book_id = db.Column(db.Integer, db.ForeignKey(Book.id), nullable=False, unique=True)
 
 class OrderStatus(enum.Enum):
@@ -128,7 +128,6 @@ class OrderDetail(db.Model):
     @property
     def unit_price(self):
         return self.quantity * self.book.price
-
 
 if __name__ == '__main__':
     with app.app_context():

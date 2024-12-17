@@ -356,6 +356,23 @@ def add_books():
    except Exception as e:
        return jsonify({'success': False, 'message': 'Add books failed'})
 
+@app.route('/store_manager/import_books', methods=['POST'])
+@role_required(['quanLyKho'])
+def import_books():
+    try:
+        data = request.get_json()
+        if dao.check_inventory(data):
+            book_receipt = dao.create_book_receipt(current_user.id)
+            for item in data:
+                book_receipt_detail = dao.create_book_receipt_detail(item, book_receipt)
+                dao.import_into_inventory(book_receipt_detail)
+            return jsonify({'success': True, 'message': 'Import book done'})
+        else:
+            raise Exception('Số lượng không phù hợp')
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
 if __name__ == '__main__':
     from app.admin import *
 

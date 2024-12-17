@@ -57,53 +57,77 @@
         // HTML cho dòng mới
         const newRow = `
     <tr>
-                <td>${newRowIndex}</td>
-                <td>
-                    <select class="form-select select-book" name="book_name" style="width: 100%;" required
-                            onchange="fillBookDetails(this)">
-                        <option value="">Nhập tên sách</option>
-                        {% for book in books %}
-                        <option value="{{ book.id }}" data-genre="{{ book.genres|join(', ') }}" data-author="{{ book.authors|join(', ') }}">{{
-                            book.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td><input type="text" class="form-control" name="genre" placeholder="Nhập thể loại" required readonly>
-                </td>
-                <td><input type="text" class="form-control" name="author" placeholder="Nhập tác giả" required readonly>
-                </td>
-                <td><input type="number" class="form-control" name="quantity" placeholder="0" min="150" required
-                           value="150"></td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">
-                        Xóa
-                    </button>
-                </td>
-            </tr>`;
+        <td>${newRowIndex}</td>
+        <td>
+            <select class="form-select select2-enable" name="book_name" style="width: 100%;" required
+                    onchange="fillBookDetails(this)">
+                <option value="">Nhập tên sách</option>
+                {% for book in books %}
+                <option value="{{ book.id }}" data-genre="{{ book.genres|join(', ') }}"
+                        data-author="{{ book.authors|join(', ') }}">{{
+                    book.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="text" class="form-control" name="genre" placeholder="Nhập thể loại" required readonly></td>
+        <td><input type="text" class="form-control" name="author" placeholder="Nhập tác giả" required readonly></td>
+        <td><input type="number" class="form-control" name="quantity" placeholder="0" min="150" required value="150"></td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)">Xóa</button>
+        </td>
+    </tr>`;
 
         // Thêm dòng mới vào bảng
         tableBody.insertAdjacentHTML('beforeend', newRow);
 
-        // Khởi tạo lại Select2 cho tất cả các trường dropdown
-        initSelect2();
+        // Khởi tạo lại Select2 cho các phần tử mới
+        $('.select2-enable').each(function () {
+            if (!$(this).data('select2')) {
+                $(this).select2({
+                    placeholder: "Nhập tên sách để tìm kiếm",
+                    width: 'resolve',
+                    allowClear: true
+                });
+            }
+        });
     }
 
     // Xử lý Submit Form
     $('#book-import-form').on('submit', function (e) {
         e.preventDefault();
-        let totalBooks = 0;
 
+        let booksData = [];
+
+        // Duyệt qua từng hàng trong bảng
         $('#book-rows tr').each(function () {
-            const quantity = $(this).find('input[name="quantity"]').val() || 0;
-            totalBooks += parseInt(quantity);
+            const bookId = $(this).find('select[name="book_name"]').val();
+            const quantity = $(this).find('input[name="quantity"]').val();
+
+            // Kiểm tra nếu cả bookId và quantity hợp lệ
+            if (bookId && quantity >= 150) {
+                booksData.push({
+                    id: bookId,
+                    quantity: parseInt(quantity, 10)
+                });
+            }
         });
 
-        if (totalBooks < 150) {
-            alert("Số lượng sách nhập phải ít nhất 150 cuốn.");
-        } else {
-            alert("✅ Phiếu nhập sách đã được xác nhận!");
-        }
+        fetch('/store_manager/import_books', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(booksData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message)
+                if (data.success) {
+                    location.reload()
+                }
+            })
+            .catch(error => {
+                alert(error)
+            })
     });
 
     // tự động điền tác giả, thể loại khi chọn sách
