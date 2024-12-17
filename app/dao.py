@@ -27,17 +27,17 @@ def add_user(username, password, first_name, last_name, avatar):
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
-def get_all_book(orderby = None):
-    if orderby:
-        if orderby == "o1":
-            return Book.query.order_by(Book.price.asc()).all()
-        elif orderby == "o2":
-            return Book.query.order_by(Book.price.desc()).all()
-    else:
-        return Book.query.order_by(Book.create_date.desc()).all()
+def get_all_book():
+    return Book.query.order_by(Book.create_date.desc()).all()
 
-def get_book_by_genre(genre_name):
-    return Book.query.join(Book.genres).filter(Genre.name == genre_name).all()
+def get_book_in_inventory_by_genre(genre_name):
+    return (
+        BookInventory.query
+        .join(Book)
+        .join(Genre, Book.genres)
+        .filter(Genre.name == genre_name)
+        .all()
+    )
 
 def get_book_by_id(book_id):
     return Book.query.get(book_id)
@@ -161,3 +161,16 @@ def import_into_inventory(book_receipt_detail):
         bookInventory = BookInventory(book_id=book_receipt_detail.book_id, current_quantity=book_receipt_detail.quantity)
         db.session.add(bookInventory)
     db.session.commit()
+
+
+def get_inventory(order_by=None):
+    query = BookInventory.query.join(Book)
+
+    if order_by == 'o1':
+        query = query.order_by(Book.price.asc())
+    elif order_by == 'o2':
+        query = query.order_by(Book.price.desc())
+    else:
+        query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
+
+    return query.all()

@@ -22,10 +22,15 @@ def inject_cart_quantity():
 def home():
     genre = request.args.get('genre')
     orderby = request.args.get('orderby')
+
     if genre:
-        books = dao.get_book_by_genre(genre)
+        inventory = dao.get_book_in_inventory_by_genre(genre)
     else:
-        books = dao.get_all_book(orderby)
+        inventory = dao.get_inventory(orderby)
+
+    books = []
+    for item in inventory:
+        books.append(item.book)
 
     title_book = books[random.randint(0, len(books) - 1)]
     return render_template('index.html', books=books, title_book=title_book, genre=genre)
