@@ -48,7 +48,6 @@ def get_cart_by_user_id(user_id):
 def create_cart(user_id):
     cart = get_cart_by_user_id(user_id)
     if cart is None:
-        print("eyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy")
         cart = Order(customer_id=user_id, order_status=OrderStatus.PENDING)
         db.session.add(cart)
         db.session.commit()
@@ -151,26 +150,33 @@ def check_inventory(data):
             return False
     return True
 
-def import_into_inventory(book_receipt_detail):
-    tmp = get_book_in_inventory(book_receipt_detail.book_id)
-    if tmp:
-        tmp.current_quantity += book_receipt_detail.quantity
-        tmp.last_updated = datetime.datetime.now()
-        db.session.add(tmp)
-    else:
-        bookInventory = BookInventory(book_id=book_receipt_detail.book_id, current_quantity=book_receipt_detail.quantity)
-        db.session.add(bookInventory)
+def import_into_inventory(book_receipt_details):
+    for book_receipt_detail in book_receipt_details:
+        tmp = get_book_in_inventory(book_receipt_detail.book_id)
+        if tmp:
+            tmp.current_quantity += book_receipt_detail.quantity
+            tmp.last_updated = datetime.datetime.now()
+            db.session.add(tmp)
+        else:
+            book_inventory = BookInventory(book_id=book_receipt_detail.book_id,
+                                           current_quantity=book_receipt_detail.quantity)
+            db.session.add(book_inventory)
+        db.session.commit()
+
+def export_out_to_inventory(order_details):
+    for order_detail in order_details:
+        book = get_book_in_inventory(order_detail.book_id)
+        book.current_quantity -= order_detail.quantity
+        db.session.add(book)
     db.session.commit()
 
 
 def get_inventory(order_by=None):
     query = BookInventory.query.join(Book)
-
     if order_by == 'o1':
         query = query.order_by(Book.price.asc())
     elif order_by == 'o2':
         query = query.order_by(Book.price.desc())
     else:
         query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
-
     return query.all()

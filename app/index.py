@@ -22,16 +22,14 @@ def inject_cart_quantity():
 def home():
     genre = request.args.get('genre')
     orderby = request.args.get('orderby')
-
     if genre:
         inventory = dao.get_book_in_inventory_by_genre(genre)
     else:
         inventory = dao.get_inventory(orderby)
-
     books = []
     for item in inventory:
-        books.append(item.book)
-
+        if item.current_quantity > 0:
+            books.append(item.book)
     title_book = books[random.randint(0, len(books) - 1)]
     return render_template('index.html', books=books, title_book=title_book, genre=genre)
 
@@ -58,7 +56,6 @@ def login():
                 return redirect(url_for('store_manager'))
         else:
             err_msg = "Something wrong!!!"
-
     return render_template("login.html", err_msg=err_msg)
 
 
@@ -67,7 +64,6 @@ def login():
 def logout():
     logout_user()
     return redirect('/')
-
 
 @app.route("/signup", methods=["get", "post"])
 def signup():
@@ -107,14 +103,20 @@ def signup():
 def cart():
     if request.method == 'POST':
         try:
-            my_cart = dao.create_cart(current_user.id)
             product = request.form.to_dict()
-            product['order_id'] = my_cart.id
-            dao.add_product_in_cart(**product)
+            book_in_inventory = dao.get_book_in_inventory(product['book_id'])
+            if book_in_inventory and book_in_inventory.current_quantity >= int(product['quantity']):
+                my_cart = dao.create_cart(current_user.id)
+                product['order_id'] = my_cart.id
+                dao.add_product_in_cart(**product)
+                return jsonify({
+                    'success': True,
+                    'message': 'Item added to cart successfully'
+                }), 201
             return jsonify({
-                'success': True,
-                'message': 'Item added to cart successfully'
-            }), 201
+                'success': False,
+                'message': 'Item not in inventory or not enough'
+            })
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -190,10 +192,10 @@ def checkout_method(method, ttl):
     carts.create_date = datetime.now()
     deadline = carts.create_date + timedelta(seconds=ttl)
     dao.change_status_order(carts, carts.create_date, OrderStatus.PROCESSING)
+    dao.export_out_to_inventory(carts.order_details)
     redis_utils.set_ttl_order(order_id, ttl, "PROCESSING")
     return render_template(f'/checkout_templates/checkout_{method}.html', order_id=int(order_id),
                            total_price=total_price, deadline=deadline)
-
 
 @app.route('/checkout/offline', methods=['GET'])
 @role_required(['khachHang'])

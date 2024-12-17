@@ -30,8 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
                 .then(data => {
-                    alert(`Đã thêm sách "${bookId}" vào giỏ hàng!`);
-                    location.reload()
+                    alert(data.message)
+                    if (data.success){
+                        location.reload()
+                    }
                 })
                 .catch(error => {
                     console.error(error);
