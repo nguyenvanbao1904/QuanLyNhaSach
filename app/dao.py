@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+from operator import truediv
 
 from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory
 from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
@@ -85,6 +86,16 @@ def get_cart_total_quantity(user_id):
     for cart_detail in cart.order_details:
         rs += cart_detail.quantity
     return rs
+
+def get_product_in_cart(product_id, cart, user_id):
+    if cart.customer_id == user_id:
+        for cart_detail in cart.order_details:
+            if cart_detail.book.id == int(product_id):
+                return cart_detail
+        return None
+
+def get_product_in_cart_by_cart_detail_id(cart_detail_id):
+    return OrderDetail.query.filter_by(id=cart_detail_id).first()
 
 def get_product_detail(product_id):
     return Book.query.get(product_id)
@@ -180,3 +191,4 @@ def get_inventory(order_by=None):
     else:
         query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
     return query.all()
+

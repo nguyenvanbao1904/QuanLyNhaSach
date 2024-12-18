@@ -54,6 +54,14 @@
                 document.getElementById('total-amount').setAttribute('data-price', rs.order.total_price);
                 document.getElementById('order-status').innerText = rs.order.order_status;
                 document.getElementById('order-result').classList.remove('d-none');
+                if (rs.order.order_status !== 'processing') {
+                    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+                    if (confirmPaymentBtn) {
+                        confirmPaymentBtn.classList.add('btn-secondary');
+                        confirmPaymentBtn.classList.remove('btn-success');
+                        confirmPaymentBtn.setAttribute('disabled', true);
+                    }
+                }
 
                 const priceElement = document.querySelector('#total-amount');
                 const rawPrice = parseFloat(priceElement.getAttribute('data-price'));

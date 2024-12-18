@@ -104,19 +104,38 @@ def cart():
     if request.method == 'POST':
         try:
             product = request.form.to_dict()
-            book_in_inventory = dao.get_book_in_inventory(product['book_id'])
-            if book_in_inventory and book_in_inventory.current_quantity >= int(product['quantity']):
-                my_cart = dao.create_cart(current_user.id)
-                product['order_id'] = my_cart.id
-                dao.add_product_in_cart(**product)
+            product_id = product['book_id']
+            product_quantity = int(product['quantity'])
+            book_in_inventory = dao.get_book_in_inventory(product_id)
+            if not book_in_inventory or book_in_inventory.current_quantity <= 0:
                 return jsonify({
-                    'success': True,
-                    'message': 'Item added to cart successfully'
-                }), 201
+                    'success': False,
+                    'message': 'No book inventory'
+                })
+            if product_quantity <= 0:
+                return jsonify({
+                    'success': False,
+                    'message': 'Quantity not valid'
+                })
+            if book_in_inventory.current_quantity < product_quantity:
+                return jsonify({
+                    'success': False,
+                    'message': 'Not enough quantity'
+                })
+
+            my_cart = dao.create_cart(current_user.id)
+            book_in_cart = dao.get_product_in_cart(product_id, my_cart, current_user.id)
+            if book_in_cart and book_in_cart.quantity + product_quantity > book_in_inventory.current_quantity:
+                return jsonify({
+                    'success': False,
+                    'message': 'Not enough quantity'
+                })
+            product['order_id'] = my_cart.id
+            dao.add_product_in_cart(**product)
             return jsonify({
-                'success': False,
-                'message': 'Item not in inventory or not enough'
-            })
+                'success': True,
+                'message': 'Item added to cart successfully'
+            }), 201
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -147,7 +166,8 @@ def delete_product_in_cart(cart_id):
 def products_detail(product_id):
     book = dao.get_product_detail(product_id)
     if book:
-        return render_template('products_detail.html', book=book)
+        book_inventory = dao.get_book_in_inventory(book.id)
+        return render_template('products_detail.html', book=book, book_inventory_quantity=book_inventory.current_quantity)
     else:
         return redirect(url_for('home'))
 
@@ -159,6 +179,13 @@ def update_cart():
     product_in_cart_id = data.get("product_in_cart_id")
     quantity = data.get("quantity")
     try:
+        book_in_cart_detail = dao.get_product_in_cart_by_cart_detail_id(product_in_cart_id)
+        book_in_inventory = dao.get_book_in_inventory(book_in_cart_detail.book.id)
+        if quantity > book_in_inventory.current_quantity:
+            return jsonify({
+                'success': False,
+                'message': f'Not enough quantity! Maximum quantity for this item is {book_in_inventory.current_quantity}'
+            }), 400
         dao.update_cart(product_in_cart_id, quantity)
         return jsonify({
             'success': True,
@@ -221,7 +248,10 @@ def checkout_confirm():
         order = dao.get_order_by_id(order_id)
     if order is None:
         return jsonify({'success': False, 'message': 'order not found'})
-    dao.change_status_order(order, order.create_date, OrderStatus.DONE)
+    if order.order_status != OrderStatus.FAILED:
+        dao.change_status_order(order, order.create_date, OrderStatus.DONE)
+    else:
+        return jsonify({'success': False, 'message': 'order failed'})
     redis_client.delete(int(order_id))
     return jsonify({'success': True, 'message': 'Checkout done'})
 
