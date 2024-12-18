@@ -114,7 +114,7 @@
             </div>
             <div class="col-md-6 col-lg-4">
                 <label for="duration_${bookCount}" class="form-label">Thời gian</label>
-                <input type="number" class="form-control" id="duration_${bookCount}" name="duration_${bookCount}" placeholder="Thời gian" min="0" required>
+                <input type="number" class="form-control" id="duration_${bookCount}" name="duration_${bookCount}" placeholder="Thời gian" min="0" step="0.1" required>
             </div>
             <div class="col-md-12">
                 <label for="description_${bookCount}" class="form-label">Mô tả</label>
@@ -232,6 +232,7 @@
     })
     .then(data => {
         alert(data.message);
+        location.reload()
     })
     .catch(error => {
         console.error('Error:', error);

@@ -400,9 +400,11 @@ def import_books():
         data = request.get_json()
         if dao.check_inventory(data):
             book_receipt = dao.create_book_receipt(current_user.id)
+            book_receipt_arr = []
             for item in data:
                 book_receipt_detail = dao.create_book_receipt_detail(item, book_receipt)
-                dao.import_into_inventory(book_receipt_detail)
+                book_receipt_arr.append(book_receipt_detail)
+            dao.import_into_inventory(book_receipt_arr)
             return jsonify({'success': True, 'message': 'Import book done'})
         else:
             raise Exception('Số lượng không phù hợp')
