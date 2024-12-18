@@ -2,7 +2,7 @@ import datetime
 import hashlib
 from operator import truediv
 
-from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory
+from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem
 from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
 
 
@@ -151,13 +151,13 @@ def get_book_in_inventory(book_id):
 
 def check_inventory(data):
     for item in data:
-        if item['quantity'] < 150:
+        if item['quantity'] < int(get_config_system('inventory_min_import').value):
             return False
         book = get_book_by_id(item['id'])
         if book is None:
             return False
         book_in_inventory = get_book_in_inventory(book.id)
-        if book_in_inventory and book_in_inventory.current_quantity > 300:
+        if book_in_inventory and book_in_inventory.current_quantity > int(get_config_system('inventory_import_limit').value):
             return False
     return True
 
@@ -191,4 +191,8 @@ def get_inventory(order_by=None):
     else:
         query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
     return query.all()
+
+def get_config_system(key):
+    return ConfigSystem.query.filter_by(key=key).first()
+
 

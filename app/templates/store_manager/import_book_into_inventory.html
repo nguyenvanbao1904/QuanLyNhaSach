@@ -104,13 +104,10 @@
             const bookId = $(this).find('select[name="book_name"]').val();
             const quantity = $(this).find('input[name="quantity"]').val();
 
-            // Kiểm tra nếu cả bookId và quantity hợp lệ
-            if (bookId && quantity >= 150) {
-                booksData.push({
-                    id: bookId,
-                    quantity: parseInt(quantity, 10)
-                });
-            }
+            booksData.push({
+                id: bookId,
+                quantity: parseInt(quantity, 10)
+            });
         });
 
         fetch('/store_manager/import_books', {

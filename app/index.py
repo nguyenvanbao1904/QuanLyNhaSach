@@ -17,7 +17,14 @@ def inject_cart_quantity():
         return {'cart_total_quantity': cart_total_quantity}
     return {'cart_total_quantity': 0}
 
-
+@app.context_processor
+def inject_config_system():
+    system_config = {
+        # se cache sau vi du 'max_stock_threshold': redis.get('config:stock_import_limit') or dao.get_config('stock_import_limit'),
+        'inventory_min_import': dao.get_config_system('inventory_min_import').value,
+        'inventory_import_limit': dao.get_config_system('inventory_import_limit').value,
+    }
+    return {'system_config':system_config}
 @app.route('/')
 def home():
     genre = request.args.get('genre')
@@ -54,13 +61,15 @@ def login():
                 return redirect(url_for('staff'))
             elif user.account_role == models.AccountRole.QuanLyKho:
                 return redirect(url_for('store_manager'))
+            elif user.account_role == models.AccountRole.ADMIN:
+                return redirect(url_for('admin'))
         else:
             err_msg = "Something wrong!!!"
     return render_template("login.html", err_msg=err_msg)
 
 
 @app.route("/logout")
-@role_required(['khachHang', 'nhanVien'])
+@role_required(['khachHang', 'nhanVien', 'quanLyKho', 'admin'])
 def logout():
     logout_user()
     return redirect('/')
@@ -227,13 +236,13 @@ def checkout_method(method, ttl):
 @app.route('/checkout/offline', methods=['GET'])
 @role_required(['khachHang'])
 def checkout_offline():
-    return checkout_method("offline", 60)
+    return checkout_method("offline", int(dao.get_config_system('order_offline_cancel_timeout').value))
 
 
 @app.route('/checkout/online', methods=['GET'])
 @role_required(['khachHang'])
 def checkout_online():
-    return checkout_method("online", 60)
+    return checkout_method("online", int(dao.get_config_system('order_online_cancel_timeout').value))
 
 
 @app.route('/checkout/confirm', methods=['POST'])
@@ -411,6 +420,13 @@ def import_books():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
+
+# admin
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    return render_template('/admin/index.html')
+
 
 if __name__ == '__main__':
     from app.admin import *

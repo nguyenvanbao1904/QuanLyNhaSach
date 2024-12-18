@@ -14,7 +14,6 @@ class AccountRole(enum.Enum):
     QuanLyKho = 'quanLyKho'
     KhachHang = 'khachHang'
 
-
 class User(Item, UserMixin):
     username = db.Column(db.String(30), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
@@ -51,6 +50,13 @@ class User(Item, UserMixin):
             "buy_orders": [order.id for order in self.buy_orders] if self.buy_orders else [],
             "sell_orders": [order.id for order in self.sell_orders] if self.sell_orders else []
         }
+
+class ConfigSystem(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    key = db.Column(db.String(255), unique=True, nullable=False)
+    value = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    last_update = db.Column(db.DateTime, default=datetime.datetime.now())
 
 Book_Author = db.Table('book_author',
                        db.Column('author_id', db.Integer, db.ForeignKey('author.id'), primary_key=True),
