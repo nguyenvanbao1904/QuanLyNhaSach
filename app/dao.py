@@ -46,6 +46,9 @@ def get_book_by_id(book_id):
 def get_cart_by_user_id(user_id):
     return Order.query.filter_by(customer_id=user_id, order_status=OrderStatus.PENDING).first()
 
+def get_orders_with_details_by_status(order_status):
+    return  OrderDetail.query.join(Order,Order.id == OrderDetail.order_id).filter(Order.order_status==order_status).all()
+
 def create_cart(user_id):
     cart = get_cart_by_user_id(user_id)
     if cart is None:
@@ -192,7 +195,16 @@ def get_inventory(order_by=None):
         query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
     return query.all()
 
-def get_config_system(key):
+def get_config_system(key = None):
+    if key is None:
+        return ConfigSystem.query.all()
     return ConfigSystem.query.filter_by(key=key).first()
 
-
+def update_config_system(data):
+    for key,value in data.items():
+        tmp = ConfigSystem.query.filter_by(key=key).first()
+        if tmp is None:
+            raise Exception('Config system not found')
+        tmp.value = value
+        db.session.add(tmp)
+    db.session.commit()

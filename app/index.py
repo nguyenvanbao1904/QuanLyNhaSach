@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta
 
-from app import app, login_manager, dao, OrderStatus, redis_client, models
+from app import app, login_manager, dao, OrderStatus, redis_client, models, utils
 from flask import render_template, redirect, url_for, request, session, jsonify, json
 from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
@@ -17,14 +17,19 @@ def inject_cart_quantity():
         return {'cart_total_quantity': cart_total_quantity}
     return {'cart_total_quantity': 0}
 
+
 @app.context_processor
 def inject_config_system():
     system_config = {
         # se cache sau vi du 'max_stock_threshold': redis.get('config:stock_import_limit') or dao.get_config('stock_import_limit'),
         'inventory_min_import': dao.get_config_system('inventory_min_import').value,
         'inventory_import_limit': dao.get_config_system('inventory_import_limit').value,
+        'order_online_cancel_timeout': dao.get_config_system('order_online_cancel_timeout').value,
+        'order_offline_cancel_timeout': dao.get_config_system('order_offline_cancel_timeout').value,
     }
-    return {'system_config':system_config}
+    return {'system_config': system_config}
+
+
 @app.route('/')
 def home():
     genre = request.args.get('genre')
@@ -74,6 +79,7 @@ def logout():
     logout_user()
     return redirect('/')
 
+
 @app.route("/signup", methods=["get", "post"])
 def signup():
     if session.get('user'):
@@ -100,12 +106,14 @@ def signup():
                     err_msg = f"Avatar upload failed: {str(e)}"
                     return render_template("signup.html", err_msg=err_msg)
 
-            if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name, avatar=avatar_url):
+            if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name,
+                            avatar=avatar_url):
                 return redirect(url_for("login"))
             else:
                 err_msg = "Something Wrong!!!"
 
     return render_template("signup.html", err_msg=err_msg)
+
 
 @app.route('/cart', methods=['GET', 'POST'])
 @role_required(['khachHang'])
@@ -176,7 +184,8 @@ def products_detail(product_id):
     book = dao.get_product_detail(product_id)
     if book:
         book_inventory = dao.get_book_in_inventory(book.id)
-        return render_template('products_detail.html', book=book, book_inventory_quantity=book_inventory.current_quantity)
+        return render_template('products_detail.html', book=book,
+                               book_inventory_quantity=book_inventory.current_quantity)
     else:
         return redirect(url_for('home'))
 
@@ -233,6 +242,7 @@ def checkout_method(method, ttl):
     return render_template(f'/checkout_templates/checkout_{method}.html', order_id=int(order_id),
                            total_price=total_price, deadline=deadline)
 
+
 @app.route('/checkout/offline', methods=['GET'])
 @role_required(['khachHang'])
 def checkout_offline():
@@ -277,10 +287,12 @@ def load_user(user_id):
 def staff():
     return render_template('/staff/staff.html')
 
+
 @app.route("/staff/receive-online-order", methods=['GET'])
 @role_required(['nhanVien'])
 def receive_online_order():
     return render_template("/staff/receive_online_order.html")
+
 
 @app.route('/staff/receive-online-order/find_order', methods=['POST'])
 @role_required(['nhanVien'])
@@ -295,15 +307,17 @@ def receive_online_get_order():
             'total_price': dao.get_total_price(order),
             'phone_number': order.customer.phone_number,
             'order_status': order.order_status.value
-            }
-        })
-    return jsonify({'success': False, 'message': "order not found"} )
+        }
+                        })
+    return jsonify({'success': False, 'message': "order not found"})
+
 
 @app.route('/staff/sell-book', methods=['GET'])
 @role_required(['nhanVien'])
 def sell_book():
     books = dao.get_all_book()
     return render_template('/staff/sell_book.html', books=books)
+
 
 @app.route('/staff/sell-book/find-customer-by-email', methods=['POST'])
 @role_required(['nhanVien'])
@@ -314,6 +328,7 @@ def find_customer_email():
     if user is None:
         return jsonify({'success': False, 'message': 'email not found'})
     return jsonify({'success': True, 'user': user.to_dic()})
+
 
 @app.route('/staff/sell-book/checkout', methods=['POST'])
 @role_required(['nhanVien'])
@@ -347,6 +362,7 @@ def store_manager():
     authors = dao.get_all_author()
     return render_template('/store_manager/store_manager.html', books=books, genres=genres, authors=authors)
 
+
 @app.route('/store_manager/add_genres', methods=['POST'])
 @role_required(['quanLyKho'])
 def add_genres():
@@ -359,6 +375,7 @@ def add_genres():
         return jsonify({'success': True, 'message': 'Genres added'})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Add genres failed'})
+
 
 @app.route('/store_manager/add_authors', methods=['POST'])
 @role_required(['quanLyKho'])
@@ -373,34 +390,36 @@ def add_authors():
     except Exception as e:
         return jsonify({'success': False, 'message': 'Add authors failed'})
 
+
 @app.route('/store_manager/add_books', methods=['POST'])
 @role_required(['quanLyKho'])
 def add_books():
-   try:
-       books_data = json.loads(request.form['books'])
-       image_url = ""
-       index = 0
-       for book_data in books_data:
-           authors = dao.find_authors(book_data.get('authors'))
-           genres = dao.find_genres(book_data.get('genres'))
-           del book_data['authors']
-           del book_data['genres']
-           if request.files:
-               image_file = request.files[f'images[{index}]']
-               try:
-                   upload_result = cloudinary.uploader.upload(image_file)
-                   print(upload_result)
-                   image_url = upload_result['secure_url']
-               except Exception as e:
-                   err_msg = f"Avatar upload failed: {str(e)}"
-                   return jsonify({'success': False, 'message': 'Upload image failed'})
-           book = Book(**book_data, authors=authors, genres=genres, image=image_url)
-           db.session.add(book)
-           index += 1
-       db.session.commit()
-       return jsonify({'success': True, 'message': 'Books added'})
-   except Exception as e:
-       return jsonify({'success': False, 'message': 'Add books failed'})
+    try:
+        books_data = json.loads(request.form['books'])
+        image_url = ""
+        index = 0
+        for book_data in books_data:
+            authors = dao.find_authors(book_data.get('authors'))
+            genres = dao.find_genres(book_data.get('genres'))
+            del book_data['authors']
+            del book_data['genres']
+            if request.files:
+                image_file = request.files[f'images[{index}]']
+                try:
+                    upload_result = cloudinary.uploader.upload(image_file)
+                    print(upload_result)
+                    image_url = upload_result['secure_url']
+                except Exception as e:
+                    err_msg = f"Avatar upload failed: {str(e)}"
+                    return jsonify({'success': False, 'message': 'Upload image failed'})
+            book = Book(**book_data, authors=authors, genres=genres, image=image_url)
+            db.session.add(book)
+            index += 1
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Books added'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Add books failed'})
+
 
 @app.route('/store_manager/import_books', methods=['POST'])
 @role_required(['quanLyKho'])
@@ -421,12 +440,33 @@ def import_books():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
+
 # admin
 
 @app.route('/admin', methods=['GET'])
+@role_required(['admin'])
 def admin():
-    return render_template('/admin/index.html')
+    books = dao.get_all_book()
+    inventory = dao.get_inventory()
 
+    order_details_status_done = dao.get_orders_with_details_by_status(OrderStatus.DONE)
+    revenue_data = utils.get_total_revenue_and_books_every_month(order_details_status_done)
+    total_book_in_invetory = utils.get_total_book_in_inventory(inventory)
+    grouped_book_frequency_data = utils.get_sales_data_by_month_and_book(order_details_status_done)
+
+    return render_template('/admin/my_index.html', books=books, inventory=inventory,
+                           revenue_data=revenue_data, total_book_in_invetory=total_book_in_invetory, grouped_book_frequency_data=grouped_book_frequency_data)
+
+
+@app.route('/update_config_system', methods=['PUT'])
+@role_required(['admin'])
+def update_config_system():
+    try:
+        data = request.get_json()
+        dao.update_config_system(data)
+        return jsonify({'success': True, 'message': 'Config system updated'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 if __name__ == '__main__':
     from app.admin import *

@@ -11,7 +11,7 @@ from flask_wtf.file import FileField, FileAllowed
 from wtforms import validators
 import cloudinary.uploader
 
-admin = Admin(app=app, name='Book Store Admin', url='/dev_admin')
+admin = Admin(app=app, name='Book Store Admin', url='/flask_admin')
 
 
 class UserView(ModelView):
@@ -68,7 +68,7 @@ admin.add_view(BaseView(Genre, db.session))
 
 
 class OrderView(ModelView):
-    form_excluded_columns = ('other_details', 'create_date')
+    form_excluded_columns = ('other_details')
 
 
 admin.add_view(OrderView(Order, db.session))
