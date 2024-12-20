@@ -1,3 +1,4 @@
+import math
 import random
 from datetime import datetime, timedelta
 
@@ -34,16 +35,21 @@ def inject_config_system():
 def home():
     genre = request.args.get('genre')
     orderby = request.args.get('orderby')
+    page = request.args.get('page', 1, type=int)
+    page_size = 4
     if genre:
-        inventory = dao.get_book_in_inventory_by_genre(genre)
+        inventory = dao.get_book_in_inventory_by_genre(genre, page=int(page), page_size=page_size)
     else:
-        inventory = dao.get_inventory(orderby)
+        inventory = dao.get_inventory(orderby, page=int(page), page_size=page_size)
     books = []
     for item in inventory:
         if item.current_quantity > 0:
             books.append(item.book)
+    total = dao.get_count_inventory()
     title_book = books[random.randint(0, len(books) - 1)]
-    return render_template('index.html', books=books, title_book=title_book, genre=genre)
+
+    return render_template('index.html', books=books, title_book=title_book, genre=genre, pages=math.ceil(total / page_size),
+                           current_page=page, orderby=orderby)
 
 
 @login_manager.user_loader

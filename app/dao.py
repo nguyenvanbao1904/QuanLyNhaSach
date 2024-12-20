@@ -31,13 +31,14 @@ def get_user_by_id(user_id):
 def get_all_book():
     return Book.query.order_by(Book.create_date.desc()).all()
 
-def get_book_in_inventory_by_genre(genre_name):
+def get_book_in_inventory_by_genre(genre_name, page, page_size):
+    start = (page - 1) * page_size
     return (
         BookInventory.query
         .join(Book)
         .join(Genre, Book.genres)
         .filter(Genre.name == genre_name)
-        .all()
+        .slice(start, start + page_size)
     )
 
 def get_book_by_id(book_id):
@@ -185,15 +186,19 @@ def export_out_to_inventory(order_details):
     db.session.commit()
 
 
-def get_inventory(order_by=None):
+def get_inventory(order_by=None, page=1, page_size=4):
     query = BookInventory.query.join(Book)
     if order_by == 'o1':
         query = query.order_by(Book.price.asc())
     elif order_by == 'o2':
         query = query.order_by(Book.price.desc())
     else:
-        query = query.order_by(BookInventory.last_updated.desc())  # Mặc định sắp xếp theo last_updated
-    return query.all()
+        query = query.order_by(BookInventory.last_updated.desc())
+    start = (page - 1) * page_size
+    return query.slice(start, start + page_size)
+
+def get_count_inventory():
+    return BookInventory.query.count()
 
 def get_config_system(key = None):
     if key is None:
