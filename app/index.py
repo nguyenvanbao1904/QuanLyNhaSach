@@ -54,7 +54,7 @@ def home():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    return models.User.get(user_id)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -342,7 +342,7 @@ def staff_checkout():
     data = request.get_json()
     customer_id = data.get('customer_id')
     seller_id = data.get('seller_id')
-    order = Order(customer_id=customer_id, employee_id=seller_id, order_status=OrderStatus.DONE)
+    order = models.Order(customer_id=customer_id, employee_id=seller_id, order_status=OrderStatus.DONE)
 
     order_details = data.get('order_details')
     if order_details is None:
@@ -350,7 +350,7 @@ def staff_checkout():
     ods = []
     order_details = json.loads(order_details)
     for order_detail in order_details:
-        od = OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'))
+        od = models.OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'))
         ods.append(od)
     order.order_details = ods
     db.session.add(order)
@@ -375,7 +375,7 @@ def add_genres():
     try:
         data = request.get_json()
         for genre in data:
-            g = Genre(name=genre)
+            g = models.Genre(name=genre)
             db.session.add(g)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Genres added'})
@@ -389,7 +389,7 @@ def add_authors():
     try:
         data = request.get_json()
         for author in data:
-            a = Author(name=author)
+            a = models.Author(name=author)
             db.session.add(a)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Authors added'})
@@ -418,7 +418,7 @@ def add_books():
                 except Exception as e:
                     err_msg = f"Avatar upload failed: {str(e)}"
                     return jsonify({'success': False, 'message': 'Upload image failed'})
-            book = Book(**book_data, authors=authors, genres=genres, image=image_url)
+            book = models.Book(**book_data, authors=authors, genres=genres, image=image_url)
             db.session.add(book)
             index += 1
         db.session.commit()
