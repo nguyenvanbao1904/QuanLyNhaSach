@@ -145,7 +145,6 @@ def cart():
                     'success': False,
                     'message': 'Not enough quantity'
                 })
-
             my_cart = dao.create_cart(current_user.id)
             book_in_cart = dao.get_product_in_cart(product_id, my_cart, current_user.id)
             if book_in_cart and book_in_cart.quantity + product_quantity > book_in_inventory.current_quantity:
@@ -154,6 +153,7 @@ def cart():
                     'message': 'Not enough quantity'
                 })
             product['order_id'] = my_cart.id
+            product['unit_price'] = int(product['quantity']) * book_in_inventory.book.price
             dao.add_product_in_cart(**product)
             return jsonify({
                 'success': True,
@@ -452,16 +452,9 @@ def import_books():
 @app.route('/admin', methods=['GET'])
 @role_required(['admin'])
 def admin():
-    books = dao.get_all_book()
-    inventory = dao.get_inventory()
-
-    order_details_status_done = dao.get_orders_with_details_by_status(OrderStatus.DONE)
-    revenue_data = utils.get_total_revenue_and_books_every_month(order_details_status_done)
-    total_book_in_invetory = utils.get_total_book_in_inventory(inventory)
-    grouped_book_frequency_data = utils.get_sales_data_by_month_and_book(order_details_status_done)
-
-    return render_template('/admin/my_index.html', books=books, inventory=inventory,
-                           revenue_data=revenue_data, total_book_in_invetory=total_book_in_invetory, grouped_book_frequency_data=grouped_book_frequency_data)
+    revenue_data = dao.get_revenue_by_month()
+    total_book_in_invetory = dao.get_total_quantity_in_inventory()
+    return render_template('/admin/my_index.html', revenue_data=revenue_data, total_book_in_invetory=total_book_in_invetory)
 
 
 @app.route('/update_config_system', methods=['PUT'])

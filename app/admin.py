@@ -131,3 +131,4 @@ admin = Admin(app=app, name='', url='/flask-admin', index_view=MyAdminIndexView(
 admin.add_view(BookAdminView(models.Book, db.session, name="Quản lý Sách"))
 admin.add_view(AuthorAdminView(models.Author, db.session))
 admin.add_view(GenreAdminView(models.Genre, db.session))
+admin.add_view(ModelView(models.Order, db.session))

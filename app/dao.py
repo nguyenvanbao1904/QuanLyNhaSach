@@ -1,8 +1,12 @@
 import datetime
 import hashlib
-from operator import truediv
+from sqlalchemy import cast, Integer
 
-from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem
+from certifi import where
+from sqlalchemy import Integer
+from sqlalchemy.sql import func
+
+from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem, app
 from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
 
 
@@ -65,6 +69,7 @@ def add_product_in_cart(**kwargs):
         db.session.add(o)
     else:
         current_order.quantity += int(o.quantity)
+        current_order.unit_price += float(o.unit_price)
     db.session.commit()
 
 def get_total_price(cart):
@@ -82,6 +87,7 @@ def delete_product_in_cart(cart_id, user_id):
 def update_cart(product_in_cart_id, new_quantity):
     o = OrderDetail.query.filter_by(id=product_in_cart_id).first()
     o.quantity = new_quantity
+    o.unit_price = o.book.price * new_quantity
     db.session.commit()
 
 def get_cart_total_quantity(user_id):
@@ -197,6 +203,11 @@ def get_inventory(order_by=None, page=1, page_size=4):
     start = (page - 1) * page_size
     return query.slice(start, start + page_size)
 
+def get_total_quantity_in_inventory():
+    rs = db.session.query(func.sum(BookInventory.current_quantity)).scalar()
+    return rs or 0
+
+
 def get_count_inventory():
     return BookInventory.query.count()
 
@@ -213,3 +224,21 @@ def update_config_system(data):
         tmp.value = value
         db.session.add(tmp)
     db.session.commit()
+
+def get_revenue_by_month():
+    return ((db.session.query(func.extract('month', Order.create_date,),
+                              func.extract('year', Order.create_date),
+                              func.sum(OrderDetail.unit_price),
+                              cast(func.sum(OrderDetail.quantity), Integer),
+            )
+            .join(Order, Order.id == OrderDetail.order_id))
+            .where(Order.order_status == OrderStatus.DONE)
+            .group_by(func.extract('month', Order.create_date),
+                      func.extract('year', Order.create_date),
+            )
+            .all()
+    )
+
+if __name__ == '__main__':
+    with app.app_context():
+        print(get_total_quantity_in_inventory())

@@ -130,10 +130,7 @@ class OrderDetail(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     book_id = db.Column(db.Integer, db.ForeignKey(Book.id), nullable=False)
     order_id = db.Column(db.Integer, db.ForeignKey(Order.id), nullable=False)
-
-    @property
-    def unit_price(self):
-        return self.quantity * self.book.price
+    unit_price = db.Column(db.Float, nullable=False)
 
 if __name__ == '__main__':
     with app.app_context():
