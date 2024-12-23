@@ -1,5 +1,6 @@
 import math
 import random
+from collections import defaultdict
 from datetime import datetime, timedelta
 
 from app import app, login_manager, dao, OrderStatus, redis_client, models, utils
@@ -48,7 +49,8 @@ def home():
     total = dao.get_count_inventory()
     title_book = books[random.randint(0, len(books) - 1)]
 
-    return render_template('index.html', books=books, title_book=title_book, genre=genre, pages=math.ceil(total / page_size),
+    return render_template('index.html', books=books, title_book=title_book, genre=genre,
+                           pages=math.ceil(total / page_size),
                            current_page=page, orderby=orderby)
 
 
@@ -454,7 +456,15 @@ def import_books():
 def admin():
     revenue_data = dao.get_revenue_by_month()
     total_book_in_invetory = dao.get_total_quantity_in_inventory()
-    return render_template('/admin/my_index.html', revenue_data=revenue_data, total_book_in_invetory=total_book_in_invetory)
+    sales_data_by_book = dao.get_sales_data_by_month_and_book()
+    sales_data_by_month = defaultdict(lambda: defaultdict(int))
+
+    for month, year, book, sales in sales_data_by_book:
+        key = f"{month}/{year}"
+        sales_data_by_month[key][book] += sales
+
+    return render_template('/admin/my_index.html', revenue_data=revenue_data,
+                               total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
 
 
 @app.route('/update_config_system', methods=['PUT'])
@@ -466,6 +476,7 @@ def update_config_system():
         return jsonify({'success': True, 'message': 'Config system updated'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
 
 if __name__ == '__main__':
     from app.admin import *
