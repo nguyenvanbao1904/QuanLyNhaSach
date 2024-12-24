@@ -60,7 +60,7 @@
                     <p class="card-text price" data-price={{item.book.price}}></p>
                     <div class="d-flex">
                         <input type="number" id="quantity-{{ item.book.id }}" class="form-control me-2"
-                               placeholder="Số lượng" min="1" value="1">
+                               placeholder="Số lượng" min="1" value="1" max={{item.current_quantity}}>
                         <button class="btn btn-primary"
                                 onclick="addToCart({{ item.book.id }}, '{{ item.book.name }}', {{ item.book.price }})">Thêm
                         </button>

@@ -34,10 +34,11 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 
-def get_all_book(query = None):
+def get_all_book(query=None):
     if query:
         return Book.query.filter(Book.name.like(f"%{query}%")).order_by(Book.create_date.desc()).all()
     return Book.query.order_by(Book.create_date.desc()).all()
+
 
 def get_book_by_id(book_id):
     return Book.query.get(book_id)
@@ -214,7 +215,7 @@ def export_out_to_inventory(order_details):
     db.session.commit()
 
 
-def get_inventory(genre = None, orderby = None, q = None, page = None, page_size =None):
+def get_inventory(genre=None, orderby=None, q=None, page=None, page_size=None):
     query = db.session.query(BookInventory).join(Book, BookInventory.book_id == Book.id)
     if genre:
         query = query.join(Book_Genre, Book_Genre.c.book_id == Book.id)
