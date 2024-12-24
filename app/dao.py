@@ -2,11 +2,10 @@ import datetime
 import hashlib
 from sqlalchemy import cast, Integer
 
-from certifi import where
 from sqlalchemy import Integer
 from sqlalchemy.sql import func
 
-from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem, app
+from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem, app, Book_Genre
 from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
 
 
@@ -35,20 +34,10 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 
-def get_all_book():
+def get_all_book(query = None):
+    if query:
+        return Book.query.filter(Book.name.like(f"%{query}%")).order_by(Book.create_date.desc()).all()
     return Book.query.order_by(Book.create_date.desc()).all()
-
-
-def get_book_in_inventory_by_genre(genre_name, page, page_size):
-    start = (page - 1) * page_size
-    return (
-        BookInventory.query
-        .join(Book)
-        .join(Genre, Book.genres)
-        .filter(Genre.name == genre_name)
-        .slice(start, start + page_size)
-    )
-
 
 def get_book_by_id(book_id):
     return Book.query.get(book_id)
@@ -225,16 +214,20 @@ def export_out_to_inventory(order_details):
     db.session.commit()
 
 
-def get_inventory(order_by=None, page=1, page_size=4):
-    query = BookInventory.query.join(Book)
-    if order_by == 'o1':
-        query = query.order_by(Book.price.asc())
-    elif order_by == 'o2':
-        query = query.order_by(Book.price.desc())
-    else:
-        query = query.order_by(BookInventory.last_updated.desc())
+def get_inventory(genre = None, orderby = None, q = None, page = None, page_size =None):
+    query = db.session.query(BookInventory).join(Book, BookInventory.book_id == Book.id)
+    if genre:
+        query = query.join(Book_Genre, Book_Genre.c.book_id == Book.id)
+        query = query.join(Genre, Genre.id == Book_Genre.c.genre_id)
+        query = query.filter(Genre.name == genre)
+    if orderby == 'o1':
+        query = query.order_by(Book.id)
+    if orderby == 'o2':
+        query = query.order_by(Book.id.desc())
+    if q:
+        query = query.filter(Book.name.like(f"%{q}%"))
     start = (page - 1) * page_size
-    return query.slice(start, start + page_size)
+    return query.offset(start).limit(page_size).all()
 
 
 def get_total_quantity_in_inventory():
@@ -242,7 +235,18 @@ def get_total_quantity_in_inventory():
     return rs or 0
 
 
-def get_count_inventory():
+def get_count_inventory(genre=None, query=None):
+    if genre:
+        return (db.session.query(func.count(BookInventory.id))
+                .join(Book, Book.id == BookInventory.book_id)
+                .join(Book_Genre, Book_Genre.c.book_id == Book.id)
+                .join(Genre, Genre.id == Book_Genre.c.genre_id)
+                .filter(Genre.name == genre)
+                .scalar()
+                )
+    if query:
+        return BookInventory.query.join(Book, Book.id == BookInventory.book_id).filter(
+            Book.name.like(f"%{query}%")).count()
     return BookInventory.query.count()
 
 
@@ -297,8 +301,6 @@ def get_sales_data_by_month_and_book():
                       )
             .all()
             )
-
-
 
 
 if __name__ == '__main__':

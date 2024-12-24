@@ -5,13 +5,26 @@
 
     <!-- Search Bar -->
     <div class="row mb-4">
-        <div class="col-md-8">
-            <input type="text" id="search-book" class="form-control"
-                   placeholder="🔍 Tìm kiếm sách theo tên, tác giả, hoặc ISBN...">
-        </div>
-        <div class="col-md-4">
-            <button class="btn btn-primary w-100" onclick="searchBook()">Tìm kiếm</button>
-        </div>
+        <!-- Search form -->
+        <form class="input-group w-100 my-auto d-none d-sm-flex" id="search_input">
+            <div class="row w-100">
+                <div class="col-md-8">
+                    <input
+                            autocomplete="off"
+                            type="search"
+                            class="form-control rounded"
+                            placeholder="Tìm kiếm sách..."
+                            style="min-width: 125px;"
+                    />
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary text-blue ms-3 w-100" style="border-radius: 10px;" type="submit">
+                        &#128269;
+                        Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <!-- QR Code Scanner -->
@@ -29,33 +42,47 @@
     <!-- Book List -->
     <h4 class="mb-3">📖 Danh sách sách:</h4>
     <div class="row" id="book-list">
-        {%for book in books%}
+        {%for item in inventory%}
         <div class="col-md-4 mb-3">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ book.name }}</h5>
+                    <h5 class="card-title">{{ item.book.name }}</h5>
                     <p class="card-text">Tác giả:
-                        {% for author in book.authors %}
+                        {% for author in item.book.authors %}
                         <span>{{ author }}</span>{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                     <p class="card-text">Thể loại:
-                        {% for genre in book.genres %}
+                        {% for genre in item.book.genres %}
                         <span>{{ genre }}</span>{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
-                    <p class="card-text price" data-price={{book.price}}></p>
+                    <p class="card-text price" data-price={{item.book.price}}></p>
                     <div class="d-flex">
-                        <input type="number" id="quantity-{{ book.id }}" class="form-control me-2"
+                        <input type="number" id="quantity-{{ item.book.id }}" class="form-control me-2"
                                placeholder="Số lượng" min="1" value="1">
                         <button class="btn btn-primary"
-                                onclick="addToCart({{ book.id }}, '{{ book.name }}', {{ book.price }})">Thêm
+                                onclick="addToCart({{ item.book.id }}, '{{ item.book.name }}', {{ item.book.price }})">Thêm
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         {%endfor%}
+        <div class="pagination mt-5 d-flex justify-content-center">
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            {% for i in range(1, pages + 1) %}
+            <li class="page-item {% if i == current_page %}active{% endif %}">
+                <a class="page-link text-blue fs-5"
+                   href="?page={{ i }}{% if query %}&query={{ query }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+</div>
     </div>
 
     <!-- Email Input Section -->
@@ -136,14 +163,12 @@
 
     function checkout() {
         if (cart.length === 0) return alert("Giỏ hàng trống! Hãy thêm sách vào giỏ hàng trước khi thanh toán.");
-        alert("Thanh toán thành công! Cảm ơn bạn đã mua sách.");
-
         fetch('/staff/sell-book/checkout', {
-            method:"POST",
+            method: "POST",
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 'order_details': JSON.stringify(cart),
-                'customer_id': user ? user.id: user,
+                'customer_id': user ? user.id : user,
                 'seller_id': '{{current_user.id}}'
             })
         })
@@ -163,9 +188,9 @@
                 }
             })
             .catch(error => {
-                    console.error("Lỗi trong quá trình fetch:", error);
-                    alert('Có lỗi xảy ra khi thanh toán.');
-                });
+                console.error("Lỗi trong quá trình fetch:", error);
+                alert('Có lỗi xảy ra khi thanh toán.');
+            });
     }
 
     function searchBook() {
@@ -210,4 +235,5 @@
         addToCart(bookId, bookName, bookPrice);
     }
 </script>
+<script src="../../static/javascript/search_product.js"></script>
 {%endblock%}

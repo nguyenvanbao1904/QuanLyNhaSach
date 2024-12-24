@@ -36,22 +36,24 @@ def inject_config_system():
 def home():
     genre = request.args.get('genre')
     orderby = request.args.get('orderby')
+    query = request.args.get('query')
     page = request.args.get('page', 1, type=int)
     page_size = 4
-    if genre:
-        inventory = dao.get_book_in_inventory_by_genre(genre, page=int(page), page_size=page_size)
-    else:
-        inventory = dao.get_inventory(orderby, page=int(page), page_size=page_size)
+    inventory = dao.get_inventory(genre=genre, orderby=orderby, q=query, page=page, page_size=page_size)
     books = []
     for item in inventory:
-        if item.current_quantity > 0:
-            books.append(item.book)
-    total = dao.get_count_inventory()
-    title_book = books[random.randint(0, len(books) - 1)]
+        books.append({
+            'book' : item.book,
+            'quantity' : item.current_quantity,
+        })
+    total = dao.get_count_inventory(genre, query)
+    title_book = None
+    if len(books) != 0:
+        title_book = books[random.randint(0, len(books) - 1)]
 
     return render_template('index.html', books=books, title_book=title_book, genre=genre,
                            pages=math.ceil(total / page_size),
-                           current_page=page, orderby=orderby)
+                           current_page=page, orderby=orderby, query=query)
 
 
 @login_manager.user_loader
@@ -132,35 +134,24 @@ def cart():
             product_id = product['book_id']
             product_quantity = int(product['quantity'])
             book_in_inventory = dao.get_book_in_inventory(product_id)
-            if not book_in_inventory or book_in_inventory.current_quantity <= 0:
-                return jsonify({
-                    'success': False,
-                    'message': 'No book inventory'
-                })
-            if product_quantity <= 0:
-                return jsonify({
-                    'success': False,
-                    'message': 'Quantity not valid'
-                })
-            if book_in_inventory.current_quantity < product_quantity:
-                return jsonify({
-                    'success': False,
-                    'message': 'Not enough quantity'
-                })
+
             my_cart = dao.create_cart(current_user.id)
             book_in_cart = dao.get_product_in_cart(product_id, my_cart, current_user.id)
-            if book_in_cart and book_in_cart.quantity + product_quantity > book_in_inventory.current_quantity:
+            if (book_in_cart and utils.check_existing_inventory(product_id,
+                                                                product_quantity + book_in_cart.quantity)) or (
+                    not book_in_cart and utils.check_existing_inventory(product_id, product_quantity)):
+                product['order_id'] = my_cart.id
+                product['unit_price'] = int(product['quantity']) * book_in_inventory.book.price
+                dao.add_product_in_cart(**product)
+                return jsonify({
+                    'success': True,
+                    'message': 'Item added to cart successfully'
+                }), 201
+            else:
                 return jsonify({
                     'success': False,
-                    'message': 'Not enough quantity'
-                })
-            product['order_id'] = my_cart.id
-            product['unit_price'] = int(product['quantity']) * book_in_inventory.book.price
-            dao.add_product_in_cart(**product)
-            return jsonify({
-                'success': True,
-                'message': 'Item added to cart successfully'
-            }), 201
+                    'message': 'Item added to cart failed'
+                }), 400
         except Exception as e:
             return jsonify({
                 'success': False,
@@ -207,7 +198,7 @@ def update_cart():
     try:
         book_in_cart_detail = dao.get_product_in_cart_by_cart_detail_id(product_in_cart_id)
         book_in_inventory = dao.get_book_in_inventory(book_in_cart_detail.book.id)
-        if quantity > book_in_inventory.current_quantity:
+        if not utils.check_existing_inventory(book_in_cart_detail.book.id, quantity):
             return jsonify({
                 'success': False,
                 'message': f'Not enough quantity! Maximum quantity for this item is {book_in_inventory.current_quantity}'
@@ -323,9 +314,13 @@ def receive_online_get_order():
 @app.route('/staff/sell-book', methods=['GET'])
 @role_required(['nhanVien'])
 def sell_book():
-    books = dao.get_all_book()
-    return render_template('/staff/sell_book.html', books=books)
-
+    query = request.args.get('query')
+    page = request.args.get('page', 1, type=int)
+    page_size = 6
+    inventory = dao.get_inventory(q=query, page=page, page_size=page_size)
+    total = dao.get_count_inventory(query=query)
+    return render_template('/staff/sell_book.html', inventory=inventory, pages=math.ceil(total / page_size),
+                           current_page=page,query=query)
 
 @app.route('/staff/sell-book/find-customer-by-email', methods=['POST'])
 @role_required(['nhanVien'])
@@ -352,9 +347,16 @@ def staff_checkout():
     ods = []
     order_details = json.loads(order_details)
     for order_detail in order_details:
-        od = models.OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'))
-        ods.append(od)
+        if utils.check_existing_inventory(order_detail.get('id'), order_detail.get('quantity')):
+            od = models.OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'), unit_price=order_detail.get('quantity') * order_detail.get('price'))
+            ods.append(od)
+        else:
+            book_in_inventory = dao.get_book_in_inventory(order_detail.get('id'))
+            if not book_in_inventory:
+                return jsonify({'success': False, 'message': f'{order_detail.get("name")} not found in inventory'})
+            return jsonify({'success': False, 'message': f'Maximum of {order_detail.get("name")} is {book_in_inventory.current_quantity}'})
     order.order_details = ods
+    dao.export_out_to_inventory(order.order_details)
     db.session.add(order)
     db.session.commit()
     return jsonify({'success': True, 'message': 'Checkout done'})
@@ -464,7 +466,7 @@ def admin():
         sales_data_by_month[key][book] += sales
 
     return render_template('/admin/my_index.html', revenue_data=revenue_data,
-                               total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
+                           total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
 
 
 @app.route('/update_config_system', methods=['PUT'])
