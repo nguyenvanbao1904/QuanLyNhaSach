@@ -464,6 +464,8 @@ def admin():
     for month, year, book, sales in sales_data_by_book:
         key = f"{month}/{year}"
         sales_data_by_month[key][book] += sales
+    for tmp in sales_data_by_month.items():
+        print(tmp)
 
     return render_template('/admin/my_index.html', revenue_data=revenue_data,
                            total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
