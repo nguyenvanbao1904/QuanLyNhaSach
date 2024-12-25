@@ -18,16 +18,16 @@ def check_login(username, password):
         return None
 
 
-def add_user(username, password, first_name, last_name, avatar):
+def add_user(username, password, first_name, last_name, avatar, phone_number, email):
     try:
         user = User(username=username, password=str(hashlib.md5(password.strip().encode("utf-8")).hexdigest()),
-                    first_name=first_name, last_name=last_name, avatar=avatar)
+                    first_name=first_name, last_name=last_name, avatar=avatar, phone_number=phone_number, email=email)
         db.session.add(user)
         db.session.commit()
         return user
     except Exception as e:
         db.session.rollback()
-        return None
+        raise e
 
 
 def get_user_by_id(user_id):

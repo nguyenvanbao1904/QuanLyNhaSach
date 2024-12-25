@@ -1,4 +1,9 @@
 import enum
+import re
+
+from sqlalchemy.orm import validates
+from wtforms.validators import ValidationError
+
 from app import db, app
 import datetime
 from flask_login import UserMixin
@@ -20,7 +25,7 @@ class User(Item, UserMixin):
     first_name = db.Column(db.String(30), unique=False, nullable=False)
     last_name = db.Column(db.String(30), unique=False, nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=True)
-    phone_number = db.Column(db.String(20), unique=True, nullable=True)
+    phone_number = db.Column(db.String(20), unique=True, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     avatar = db.Column(db.String(255), nullable=True)
 
@@ -28,6 +33,14 @@ class User(Item, UserMixin):
     book_receipts = db.relationship('BookReceipt', backref='user', lazy=True)
     buy_orders = db.relationship('Order', backref='customer', lazy=True, foreign_keys='Order.customer_id')
     sell_orders = db.relationship('Order', backref='seller', lazy=True, foreign_keys='Order.employee_id')
+
+    @validates('phone_number')
+    def validate_password(self, key, value):
+        pattern = r'(84|0[3|5|7|8|9])+([0-9]{8})\b'
+        if not re.match(pattern, value):
+            raise ValidationError(
+                "Số điện thoại không hợp lệ")  # W
+        return value
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name

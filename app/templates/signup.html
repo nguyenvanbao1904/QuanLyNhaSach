@@ -40,7 +40,20 @@
                     <input type="text" id="last_name" class="form-control" name="last_name"
                            placeholder="Nhập họ của bạn" required>
                 </div>
+                <!-- Phone Number -->
+                <div class="mb-3">
+                    <label for="phone-number" class="form-label">Số điện thoại</label>
+                    <input type="tel" id="phone-number" class="form-control" name="phone-number"
+                           placeholder="Nhập số điện thoại" pattern="(84|0[3-9])[0-9]{8}" required>
+                </div>
 
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" name="email"
+                           placeholder="Nhập email" required>
+                </div>
+                <!--Avatar-->
                 <div class="mb-3">
                     <label for="last_name" class="form-label">Tải lên avatar của bạn</label>
                     <input type="file" id="avatar" class="form-control" name="avatar"

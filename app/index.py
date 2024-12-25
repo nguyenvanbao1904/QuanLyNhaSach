@@ -2,6 +2,9 @@ import math
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta
+import re
+
+from sqlalchemy.exc import IntegrityError
 
 from app import app, login_manager, dao, OrderStatus, redis_client, models, utils
 from flask import render_template, redirect, url_for, request, session, jsonify, json
@@ -43,8 +46,8 @@ def home():
     books = []
     for item in inventory:
         books.append({
-            'book' : item.book,
-            'quantity' : item.current_quantity,
+            'book': item.book,
+            'quantity': item.current_quantity,
         })
     total = dao.get_count_inventory(genre, query)
     title_book = None
@@ -92,35 +95,57 @@ def logout():
 
 @app.route("/signup", methods=["get", "post"])
 def signup():
-    if session.get('user'):
-        return redirect(request.url)
-    err_msg = ""
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        password_confirm = request.form.get("password_confirm")
-        first_name = request.form.get("first_name")
-        last_name = request.form.get("last_name")
-        avatar_url = None
-        if password.strip() != password_confirm.strip():
-            err_msg = "Passwords don't match!"
-        else:
-            if 'avatar' in request.files and request.files['avatar'].filename != '':
-                avatar_file = request.files['avatar']
-                try:
-                    upload_result = cloudinary.uploader.upload(avatar_file)
-                    print(upload_result)
-                    avatar_url = upload_result['secure_url']
-                except Exception as e:
-                    print(avatar_url)
-                    err_msg = f"Avatar upload failed: {str(e)}"
-                    return render_template("signup.html", err_msg=err_msg)
-
-            if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name,
-                            avatar=avatar_url):
-                return redirect(url_for("login"))
+    try:
+        if session.get('user'):
+            return redirect(request.url)
+        err_msg = ""
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            password_confirm = request.form.get("password_confirm")
+            first_name = request.form.get("first_name")
+            last_name = request.form.get("last_name")
+            phone_number = request.form.get("phone-number")
+            email = request.form.get("email")
+            avatar_url = None
+            pattern = r'^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$'
+            if not re.match(pattern, password.strip()):
+                err_msg = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất một chữ cái viết hoa, một chữ cái viết thường và một chữ số."
+            elif password.strip() != password_confirm.strip():
+                err_msg = "Mật khẩu không khớp"
             else:
-                err_msg = "Something Wrong!!!"
+                if 'avatar' in request.files and request.files['avatar'].filename != '':
+                    avatar_file = request.files['avatar']
+                    try:
+                        upload_result = cloudinary.uploader.upload(avatar_file)
+                        print(upload_result)
+                        avatar_url = upload_result['secure_url']
+                    except Exception as e:
+                        print(avatar_url)
+                        err_msg = f"Avatar upload failed: {str(e)}"
+                        return render_template("signup.html", err_msg=err_msg)
+                if dao.add_user(username=username, password=password, first_name=first_name, last_name=last_name,
+                                avatar=avatar_url, phone_number=phone_number, email=email):
+                    return redirect(url_for("login"))
+                else:
+                    err_msg = "Something Wrong!!!"
+
+    except ValidationError as ve:
+        err_msg = f"{str(ve)}"
+    except IntegrityError as e:
+        if "Duplicate entry" in str(e.orig):
+            if "phone_number" in str(e.orig):
+                err_msg = "Số điện thoại này đã được sử dụng. Vui lòng sử dụng số khác."
+            elif "email" in str(e.orig):
+                err_msg = "Email này đã được sử dụng. Vui lòng sử dụng email khác."
+            elif "username" in str(e.orig):
+                err_msg = "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác."
+            else:
+                err_msg = "Đã có lỗi xảy ra. Vui lòng thử lại."
+        else:
+            err_msg = "Lỗi cơ sở dữ liệu: {str(e)}"
+    except Exception as e:
+        err_msg = f"{str(e)}"
 
     return render_template("signup.html", err_msg=err_msg)
 
@@ -320,7 +345,8 @@ def sell_book():
     inventory = dao.get_inventory(q=query, page=page, page_size=page_size)
     total = dao.get_count_inventory(query=query)
     return render_template('/staff/sell_book.html', inventory=inventory, pages=math.ceil(total / page_size),
-                           current_page=page,query=query)
+                           current_page=page, query=query)
+
 
 @app.route('/staff/sell-book/find-customer-by-email', methods=['POST'])
 @role_required(['nhanVien'])
@@ -348,13 +374,15 @@ def staff_checkout():
     order_details = json.loads(order_details)
     for order_detail in order_details:
         if utils.check_existing_inventory(order_detail.get('id'), order_detail.get('quantity')):
-            od = models.OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'), unit_price=order_detail.get('quantity') * order_detail.get('price'))
+            od = models.OrderDetail(book_id=order_detail.get('id'), quantity=order_detail.get('quantity'),
+                                    unit_price=order_detail.get('quantity') * order_detail.get('price'))
             ods.append(od)
         else:
             book_in_inventory = dao.get_book_in_inventory(order_detail.get('id'))
             if not book_in_inventory:
                 return jsonify({'success': False, 'message': f'{order_detail.get("name")} not found in inventory'})
-            return jsonify({'success': False, 'message': f'Maximum of {order_detail.get("name")} is {book_in_inventory.current_quantity}'})
+            return jsonify({'success': False,
+                            'message': f'Maximum of {order_detail.get("name")} is {book_in_inventory.current_quantity}'})
     order.order_details = ods
     dao.export_out_to_inventory(order.order_details)
     db.session.add(order)
@@ -464,9 +492,6 @@ def admin():
     for month, year, book, sales in sales_data_by_book:
         key = f"{month}/{year}"
         sales_data_by_month[key][book] += sales
-    for tmp in sales_data_by_month.items():
-        print(tmp)
-
     return render_template('/admin/my_index.html', revenue_data=revenue_data,
                            total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
 
