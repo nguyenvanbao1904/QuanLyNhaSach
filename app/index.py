@@ -2,7 +2,6 @@ import math
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta
-import re
 
 from sqlalchemy.exc import IntegrityError
 

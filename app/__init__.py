@@ -30,6 +30,23 @@ cloudinary.config(
     api_key=os.getenv('API_KEY'),
     api_secret=os.getenv('API_SECRET'))
 
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+# redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+redis_client = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST"),
+    port=int(os.getenv("REDIS_PORT")),
+    password=os.getenv("REDIS_PASSWORD"),
+    decode_responses=True
+)
+
+# Cấu hình notify-keyspace-events
+try:
+    redis_client.config_set('notify-keyspace-events', 'Ex')
+    print("Cấu hình notify-keyspace-events thành công!")
+    current_config = redis_client.config_get('notify-keyspace-events')
+    print(f"notify-keyspace-events: {current_config}")
+except redis.exceptions.RedisError as e:
+    print(f"Lỗi khi cấu hình notify-keyspace-events: {e}")
+
 worker_thread = Thread(target=pubsub_worker.handle_order_expiration, daemon=True)
 worker_thread.start()
