@@ -271,33 +271,33 @@ def update_or_create_config_system(data):
             db.session.add(tmp)
     db.session.commit()
 
-
-def get_revenue_by_month():
-    return ((db.session.query(func.extract('month', Order.create_date, ),
-                              func.extract('year', Order.create_date),
-                              func.sum(OrderDetail.unit_price),
-                              cast(func.sum(OrderDetail.quantity), Integer),
-                              )
-             .join(Order, Order.id == OrderDetail.order_id))
-            .where(Order.order_status == OrderStatus.DONE)
-            .group_by(func.extract('month', Order.create_date),
-                      func.extract('year', Order.create_date),
-                      )
-            .order_by(func.extract('year', Order.create_date),
-                      func.extract('month', Order.create_date, )
-                      )
-            .all()
-            )
-
-
 def get_sales_data_by_month_and_book():
+    monthly_total_query = (db.session.query(
+        func.extract('month', Order.create_date).label('month'),
+        func.extract('year', Order.create_date).label('year'),
+        func.sum(OrderDetail.quantity).label('monthly_quantity')
+    )
+                           .join(Order, Order.id == OrderDetail.order_id)
+                           .where(Order.order_status == OrderStatus.DONE)
+                           .group_by(func.extract('month', Order.create_date),
+                                     func.extract('year', Order.create_date))
+                           .subquery()
+                           )
+
     return (db.session.query(func.extract('month', Order.create_date),
                              func.extract('year', Order.create_date),
                              Book.name,
-                             cast(func.sum(OrderDetail.quantity), Integer)
+                             cast(func.sum(OrderDetail.quantity), Integer),
+                             Genre.name,
+                             func.sum(OrderDetail.quantity / monthly_total_query.c.monthly_quantity) * 100,
                              )
             .join(Order, Order.id == OrderDetail.order_id)
             .join(Book, Book.id == OrderDetail.book_id)
+            .join(Genre, Book.primary_genre_id == Genre.id)
+            .join(monthly_total_query,
+                  (func.extract('month', Order.create_date) == monthly_total_query.c.month) &
+                  (func.extract('year', Order.create_date) == monthly_total_query.c.year)
+                  )
             .where(Order.order_status == OrderStatus.DONE)
             .group_by(func.extract('month', Order.create_date),
                       func.extract('year', Order.create_date),
@@ -308,9 +308,78 @@ def get_sales_data_by_month_and_book():
             .all()
             )
 
+
 def get_genre_by_id(genre_id):
     return Genre.query.filter_by(id=genre_id).first()
 
+
+def get_revenue_by_genre_monthly():
+    monthly_total_query = (db.session.query(
+        func.extract('month', Order.create_date).label('month'),
+        func.extract('year', Order.create_date).label('year'),
+        func.sum(OrderDetail.unit_price).label('monthly_total')
+    )
+    .join(Order, Order.id == OrderDetail.order_id)
+    .where(Order.order_status == OrderStatus.DONE)
+    .group_by(func.extract('month', Order.create_date),
+                            func.extract('year', Order.create_date))
+                            .subquery()
+    )
+
+    return (db.session.query(func.extract('month', Order.create_date),
+                             func.extract('year', Order.create_date),
+                             Genre.name,
+                             func.sum(OrderDetail.unit_price),
+                             cast(func.sum(OrderDetail.quantity), Integer),
+                             func.sum(OrderDetail.unit_price / monthly_total_query.c.monthly_total) * 100,
+                             )
+            .join(Order, Order.id == OrderDetail.order_id)
+            .join(Book, Book.id == OrderDetail.book_id)
+            .join(Book_Genre, Book_Genre.c.book_id == Book.id)
+            .join(Genre, Genre.id == Book_Genre.c.genre_id)
+            .join(monthly_total_query,
+                        (func.extract('month', Order.create_date) == monthly_total_query.c.month) &
+                        (func.extract('year', Order.create_date) == monthly_total_query.c.year)
+                  )
+            .where(Order.order_status == OrderStatus.DONE)
+            .where(Book.primary_genre_id == Genre.id)
+            .group_by(func.extract('month', Order.create_date),
+                      func.extract('year', Order.create_date),
+                      Genre.name)
+            .order_by(func.extract('year', Order.create_date),
+                      func.extract('month', Order.create_date, )
+                      )
+            ).all()
+
+
+def total_revenue_monthly():
+    return (db.session.query(func.extract('month', Order.create_date),
+                             func.extract('year', Order.create_date),
+                             func.sum(OrderDetail.unit_price))
+            .join(Order, Order.id == OrderDetail.order_id)
+            .where(Order.order_status == OrderStatus.DONE)
+            .group_by(func.extract('month', Order.create_date),
+                      func.extract('year', Order.create_date))
+            .order_by(func.extract('year', Order.create_date),
+                      func.extract('month', Order.create_date, )
+                      )
+            .all()
+    )
+
+def total_quantity_monthly():
+    return (db.session.query(func.extract('month', Order.create_date),
+                             func.extract('year', Order.create_date),
+                             func.sum(OrderDetail.quantity))
+            .join(Order, Order.id == OrderDetail.order_id)
+            .where(Order.order_status == OrderStatus.DONE)
+            .group_by(func.extract('month', Order.create_date),
+                      func.extract('year', Order.create_date))
+            .order_by(func.extract('year', Order.create_date),
+                      func.extract('month', Order.create_date, )
+                      )
+            .all()
+    )
+
 if __name__ == '__main__':
     with app.app_context():
-        print(get_total_quantity_in_inventory())
+        print(total_revenue_monthly())

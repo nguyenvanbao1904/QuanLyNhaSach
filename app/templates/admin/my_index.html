@@ -91,30 +91,44 @@
             <div class="col-md-4">
                 <div class="card bg-primary text-white h-100">
                     <div class="card-body">
-                        {%if revenue_data%}
-                        <h5>Tổng Doanh Thu {{revenue_data[revenue_data | length - 1][0]}}/{{revenue_data[revenue_data |
-                            length - 1][1]}}</h5>
-                        <p class="fs-3 price" data-price='{{revenue_data[revenue_data | length - 1][2]}}'></p>
-                        <small>{{((revenue_data[revenue_data | length - 1][2] - revenue_data[revenue_data | length - 2][2]) / revenue_data[revenue_data | length -
-                            2][2] * 100) | round}}% so với tháng trước</small>
-                        {%else%}
+                        {% set data_key = total_revenue_monthly_data.keys() | list %}
+                        {% set data_length = data_key | length %}
+                        {% if data_length != 0 %}
+                        <h5>Tổng Doanh Thu {{ data_key | last }}</h5>
+                        <p class="fs-3 price" data-price="{{ total_revenue_monthly_data.get(data_key | last) }}"></p>
+                        <small>
+                            {{
+                            ((total_revenue_monthly_data.get(data_key | last) -
+                            total_revenue_monthly_data.get(data_key[data_length - 2]))
+                            / total_revenue_monthly_data.get(data_key[data_length - 2]) * 100)
+                            | round
+                            }}% so với tháng trước
+                        </small>
+                        {% else %}
                         <h5>Chưa có dữ liệu</h5>
-                        {%endif%}
+                        {% endif %}
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card bg-success text-white h-100">
                     <div class="card-body">
-                        {%if revenue_data%}
-                        <h5>Tổng Số Sách Đã Bán {{revenue_data[revenue_data | length -
-                            1][0]}}/{{revenue_data[revenue_data | length - 1][1]}}</h5>
-                        <p class="fs-3">{{revenue_data[revenue_data | length - 1][3]}} cuốn</p>
-                        <small>{{((revenue_data[revenue_data | length - 1][3] - revenue_data[revenue_data | length - 2][3]) / revenue_data[revenue_data | length -
-                            2][3] * 100) | round}}% so với tháng trước</small>
-                        {%else%}
+                        {% set data_key = total_quantity_monthly_data.keys() | list %}
+                        {% set data_length = data_key | length %}
+                        {% if data_length != 0 %}
+                        <h5>Tổng Doanh Số {{ data_key | last }}</h5>
+                        <p class="fs-3">{{total_quantity_monthly_data.get(data_key | last)}} Sách</p>
+                        <small>
+                            {{
+                            ((total_quantity_monthly_data.get(data_key | last) -
+                            total_quantity_monthly_data.get(data_key[data_length - 2]))
+                            / total_quantity_monthly_data.get(data_key[data_length - 2]) * 100)
+                            | round
+                            }}% so với tháng trước
+                        </small>
+                        {% else %}
                         <h5>Chưa có dữ liệu</h5>
-                        {%endif%}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -122,7 +136,7 @@
                 <div class="card bg-warning text-dark h-100">
                     <div class="card-body">
                         <h5>Tổng Số Sách Còn Trong Kho</h5>
-                        <p class="fs-3">{{total_book_in_invetory}} cuốn</p>
+                        <p class="fs-3">{{total_book_in_invetory}} Sách</p>
                     </div>
                 </div>
             </div>
@@ -196,41 +210,72 @@
             </div>
         </div>
         <!-- Row: Thống kê Doanh Thu-->
-        <div class="row">
+        <div class="row mb-4">
             <!-- Thống kê doanh thu table -->
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-success text-white">
                         <h5>Bảng thống kê doanh thu theo tháng</h5>
                     </div>
                     <div class="card-body">
-                        <table id="revenueTable" class="table table-striped table-bordered">
-                            <thead>
-                            <tr>
-                                <th>Thời gian</th>
-                                <th>Doanh thu (VNĐ)</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {%for data in revenue_data%}
-                            <tr>
-                                <td>{{ data[0] ~ '/' ~ data[1] }}</td>
-                                <td class="price" data-price={{data[2]}}></td>
-                            </tr>
-                            {%endfor%}
-                            </tbody>
-                        </table>
+                        <div class="revenueTable-slider">
+                            {% for time, genres in revenue_by_genre_monthly_data.items() %}
+                            <div class="slide">
+                                <table id="revenueTable" class="table table-striped table-bordered">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5>Thời gian: {{ time }}</h5>
+                                        <h5>Tổng doanh thu: <span class="price"
+                                                                  data-price="{{total_revenue_monthly_data.get(time)}}"></span>
+                                        </h5>
+                                    </div>
+                                    <thead>
+                                    <tr>
+                                        <th>Thể loại</th>
+                                        <th>Doanh thu (VNĐ)</th>
+                                        <th>Số lượt bán</th>
+                                        <th>Tỉ lệ (%)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for genre, details in genres.items() %}
+                                    <tr>
+                                        <td>{{ genre }}</td>
+                                        <td class="price" data-price="{{ details['revenue'] | round(0) }}"></td>
+                                        <td>{{ details['quantity'] }}</td>
+                                        <td>{{ details['ratio'] | round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button id="revenueTable-prevSlide" class="btn btn-primary">Prev</button>
+                        <button id="revenueTable-nextSlide" class="btn btn-primary">Next</button>
                     </div>
+
                 </div>
             </div>
             <!-- Thống kê doanh thu chart -->
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5>Thống kê doanh thu theo tháng</h5>
+                        <h5>Thống kê doanh thu hàng tháng</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="revenueChart"></canvas>
+                        <div class="revenue_by_genre_slider">
+                            <!-- Các slide chứa biểu đồ -->
+                            {% for month_data in revenue_by_genre_monthly_data.items() %}
+                            <div class="revenue_by_genre_slide">
+                                <h5>Thời gian: {{month_data[0]}}</h5>
+                                <canvas id="revenue_by_genre_chartMonth{{ loop.index }}"
+                                        style="max-height: 300px"></canvas>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- Nút điều khiển -->
+                        <button id="revenue_by_genre_prevSlide" class="btn btn-primary">Prev</button>
+                        <button id="revenue_by_genre_nextSlide" class="btn btn-primary">Next</button>
                     </div>
                 </div>
             </div>
@@ -246,23 +291,28 @@
                     </div>
                     <div class="card-body">
                         <div class="table-slider">
-                            {% for month, books in sales_data_by_month.items()%}
+                            {% for time, books in revenue_by_book_monthly_data.items()%}
                             <div class="slide">
                                 <table class="table table-striped table-bordered" id="salesTable">
-                                    <h5 class="mb-3">Thời gian: {{month}}</h5>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5 class="mb-3">Thời gian: {{time}}</h5>
+                                        <h5>Tổng doanh số: {{total_quantity_monthly_data.get(time)}}</h5>
+                                    </div>
                                     <thead>
                                     <tr>
-                                        <th>Thời gian</th>
-                                        <th>Đầu sách</th>
+                                        <th>Tên sách</th>
+                                        <th>Thể loại</th>
                                         <th>Doanh số</th>
+                                        <th>Tỉ lệ (%)</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {% for book, sales in books.items() %}
+                                    {% for book, details in books.items() %}
                                     <tr>
-                                        <td>{{ month }}</td>
                                         <td>{{ book }}</td>
-                                        <td>{{ sales }}</td>
+                                        <td>{{ details['genre'] }}</td>
+                                        <td>{{ details['quantity'] }}</td>
+                                        <td>{{ details['ratio'] | round(2) }}</td>
                                     </tr>
                                     {% endfor %}
                                     </tbody>
@@ -286,10 +336,10 @@
                     <div class="card-body">
                         <div class="slider">
                             <!-- Các slide chứa biểu đồ -->
-                            {% for month_data in sales_data_by_month.items() %}
+                            {% for month_data in revenue_by_book_monthly_data.items() %}
                             <div class="slide">
                                 <h5>Thời gian: {{month_data[0]}}</h5>
-                                <canvas id="chartMonth{{ loop.index }}"></canvas>
+                                <canvas id="chartMonth{{ loop.index }}" style="max-height: 300px"></canvas>
                             </div>
                             {% endfor %}
                         </div>
@@ -397,63 +447,6 @@
             });
     }
 
-    // Lấy dữ liệu từ phần tử table và chuẩn hóa thành mảng dữ liệu cho Chart.js
-    document.addEventListener('DOMContentLoaded', () => {
-        const revenueTable = document.querySelector('#revenueTable');
-        const revenueData = [];
-        const labels = [];
-
-        // Lấy các hàng trong bảng thống kê doanh thu
-        revenueTable.querySelectorAll('tbody tr').forEach(row => {
-            const columns = row.children;
-            const time = columns[0].innerText;
-            const revenue = parseFloat(columns[1].getAttribute('data-price')); // Lấy doanh thu
-
-            labels.push(time);
-            revenueData.push(revenue);
-        });
-
-        // Vẽ biểu đồ doanh thu theo tháng
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-
-        new Chart(ctx, {
-            type: 'bar', // Loại biểu đồ cột
-            data: {
-                labels: labels, // Gắn nhãn (tháng/năm)
-                datasets: [{
-                    label: 'Doanh thu (VNĐ)',
-                    data: revenueData, // Dữ liệu doanh thu
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Thống kê doanh thu theo tháng'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                return value.toLocaleString('vi-VN') + ' VNĐ'; // Hiển thị dạng VNĐ
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-
-
     $(document).ready(function () {
         $('.slider').slick({
             slidesToShow: 1,       // Hiển thị 1 slide tại một thời điểm
@@ -490,45 +483,125 @@
         });
     })
 
-    // Dữ liệu cho biểu đồ tháng (ví dụ)
-    const salesDataByMonth = JSON.parse('{{ sales_data_by_month | tojson | safe }}');
+    $(document).ready(function () {
+        $('.revenueTable-slider').slick({
+            infinite: false,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            dots: true,
+            arrows: true
+        });
 
-    const monthlyData = Object.keys(salesDataByMonth).map((month) => ({
-        labels: Object.keys(salesDataByMonth[month]),
-        salesData: Object.values(salesDataByMonth[month])
-    }));
+        $('#revenueTable-prevSlide').click(function () {
+            $('.revenueTable-slider').slick('slickPrev');  // Trượt đến slide trước
+        });
 
-    // Vẽ biểu đồ cho mỗi slide
-    document.addEventListener("DOMContentLoaded", function () {
-        monthlyData.forEach((data, index) => {
+        $('#revenueTable-nextSlide').click(function () {
+            $('.revenueTable-slider').slick('slickNext');  // Trượt đến slide tiếp theo
+        });
+    });
+
+
+    // chart book
+    document.addEventListener('DOMContentLoaded', () => {
+        const revenue_by_book_monthly_data = JSON.parse('{{ revenue_by_book_monthly_data | tojson | safe }}');
+        console.log(revenue_by_book_monthly_data)
+        const sortedData = Object.entries(revenue_by_book_monthly_data)
+            .sort(([timeA], [timeB]) => {
+                const [monthA, yearA] = timeA.split('/').map(Number);
+                const [monthB, yearB] = timeB.split('/').map(Number);
+
+                return yearA - yearB || monthA - monthB;
+            });
+        sortedData.forEach(([time, bookData], index) => {
+            console.log(time)
             const ctx = document.getElementById(`chartMonth${index + 1}`).getContext('2d');
+
+            const books = Object.keys(bookData);
+            const quantity = Object.values(bookData).map(item => item.quantity);
+
             new Chart(ctx, {
-                type: 'bar',
+                type: 'pie',
                 data: {
-                    labels: data.labels,
+                    labels: books,
                     datasets: [{
-                        label: 'Doanh thu',
-                        data: data.salesData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        label: `Doanh thu (${time})`,
+                        data: quantity,
+                        backgroundColor: books.map((_, i) => `hsl(${(i * 360) / books.length}, 70%, 60%)`),
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        borderWidth: 1,
                     }]
                 },
                 options: {
-                    responsive: true, scales: {
-                        y: {
-                            beginAtZero: true, ticks: {
-                                stepSize: 1,
-                                callback: function (value) {
-                                    return value.toLocaleString();
-                                }
-                            }
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `Doanh thu theo đầu sách (${time})`
                         }
-                    }, plugins: {legend: {display: false}}
+                    },
                 }
             });
         });
     });
+
+
+    // chart genre
+    document.addEventListener('DOMContentLoaded', () => {
+        const revenueByGenreMonthlyData = JSON.parse('{{ revenue_by_genre_monthly_data | tojson | safe }}');
+
+        $('.revenue_by_genre_slider').slick({
+            infinite: true,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            dots: true,
+            arrows: false,
+        });
+
+        document.getElementById('revenue_by_genre_prevSlide').addEventListener('click', () => {
+            $('.revenue_by_genre_slider').slick('slickPrev');
+        });
+        document.getElementById('revenue_by_genre_nextSlide').addEventListener('click', () => {
+            $('.revenue_by_genre_slider').slick('slickNext');
+        });
+
+        Object.entries(revenueByGenreMonthlyData).forEach(([time, genreData], index) => {
+            const ctx = document.getElementById(`revenue_by_genre_chartMonth${index + 1}`).getContext('2d');
+
+            const genres = Object.keys(genreData);
+            const revenues = Object.values(genreData).map(item => item.revenue);
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: genres,
+                    datasets: [{
+                        label: `Doanh thu (${time})`,
+                        data: revenues,
+                        backgroundColor: genres.map((_, i) => `hsl(${(i * 360) / genres.length}, 70%, 60%)`),
+                        borderColor: 'rgba(0, 0, 0, 0.1)',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: `Doanh thu theo thể loại (${time})`
+                        }
+                    },
+                }
+            });
+        });
+    });
+
 </script>
 </body>
 </html>

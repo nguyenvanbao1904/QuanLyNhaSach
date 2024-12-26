@@ -3,6 +3,7 @@ import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+from sqlalchemy import String
 from sqlalchemy.exc import IntegrityError
 
 from app import app, login_manager, dao, OrderStatus, redis_client, models, utils
@@ -485,17 +486,48 @@ def import_books():
 @app.route('/admin', methods=['GET'])
 @role_required(['admin'])
 def admin():
-    revenue_data = dao.get_revenue_by_month()
+    revenue_by_genre_monthly = dao.get_revenue_by_genre_monthly()
+    revenue_by_genre_monthly_data = defaultdict(dict)
+    revenue_by_book_monthly = dao.get_sales_data_by_month_and_book()
+    revenue_by_book_monthly_data = defaultdict(dict)
+
     total_book_in_invetory = dao.get_total_quantity_in_inventory()
-    sales_data_by_book = dao.get_sales_data_by_month_and_book()
-    sales_data_by_month = defaultdict(lambda: defaultdict(int))
 
-    for month, year, book, sales in sales_data_by_book:
+    total_revenue_monthly = dao.total_revenue_monthly()
+    total_revenue_monthly_data = defaultdict(int)
+
+    total_quantity_monthly = dao.total_quantity_monthly()
+    total_quantity_monthly_data = defaultdict(int)
+
+    for item in total_revenue_monthly:
+        key = f'{item[0]}/{item[1]}'
+        total_revenue_monthly_data[key] += item[2]
+
+    for item in total_quantity_monthly:
+        key = f'{item[0]}/{item[1]}'
+        total_quantity_monthly_data[key] += item[2]
+
+    for month, year, book, quantity, genre, ratio in revenue_by_book_monthly:
         key = f"{month}/{year}"
-        sales_data_by_month[key][book] += sales
-    return render_template('/admin/my_index.html', revenue_data=revenue_data,
-                           total_book_in_invetory=total_book_in_invetory, sales_data_by_month=sales_data_by_month)
+        revenue_by_book_monthly_data[key][book] = ({
+            "quantity": quantity,
+            'genre': genre,
+            "ratio": ratio
+        })
+    for month, year, genre, revenue, quantity, ratio in revenue_by_genre_monthly:
+        key = f"{month}/{year}"
+        revenue_by_genre_monthly_data[key][genre] = ({
+            "revenue": revenue,
+            "quantity": quantity,
+            "ratio": ratio
+        })
 
+    return render_template('/admin/my_index.html',
+                           total_book_in_invetory=total_book_in_invetory,
+                           revenue_by_book_monthly_data=revenue_by_book_monthly_data,
+                           revenue_by_genre_monthly_data=revenue_by_genre_monthly_data,
+                           total_revenue_monthly_data=total_revenue_monthly_data,
+                           total_quantity_monthly_data=total_quantity_monthly_data)
 
 @app.route('/update_config_system', methods=['PUT'])
 @role_required(['admin'])
