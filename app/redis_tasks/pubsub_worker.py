@@ -1,9 +1,8 @@
-import redis
-redis_client = redis.StrictRedis(host='localhost', port=6379, decode_responses=True)
+
 def handle_order_expiration():
     from app import app
     with app.app_context():
-        from app import dao, models
+        from app import dao, models, redis_client
         pubsub = redis_client.pubsub()
         pubsub.psubscribe('__keyevent@0__:expired')
         for message in pubsub.listen():

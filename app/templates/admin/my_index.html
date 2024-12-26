@@ -95,11 +95,7 @@
                         <h5>Tổng Doanh Thu {{revenue_data[revenue_data | length - 1][0]}}/{{revenue_data[revenue_data |
                             length - 1][1]}}</h5>
                         <p class="fs-3 price" data-price='{{revenue_data[revenue_data | length - 1][2]}}'></p>
-                        {% if (revenue_data[revenue_data | length - 1][2] / revenue_data[revenue_data | length - 2][2] *
-                        100) > 0%}
-                        <span>+</span>
-                        {%endif%}
-                        <small>{{(revenue_data[revenue_data | length - 1][2] / revenue_data[revenue_data | length -
+                        <small>{{((revenue_data[revenue_data | length - 1][2] - revenue_data[revenue_data | length - 2][2]) / revenue_data[revenue_data | length -
                             2][2] * 100) | round}}% so với tháng trước</small>
                         {%else%}
                         <h5>Chưa có dữ liệu</h5>
@@ -114,11 +110,7 @@
                         <h5>Tổng Số Sách Đã Bán {{revenue_data[revenue_data | length -
                             1][0]}}/{{revenue_data[revenue_data | length - 1][1]}}</h5>
                         <p class="fs-3">{{revenue_data[revenue_data | length - 1][3]}} cuốn</p>
-                        {% if (revenue_data[revenue_data | length - 1][3] / revenue_data[revenue_data | length - 2][3] *
-                        100) > 0%}
-                        <span>+</span>
-                        {%endif%}
-                        <small>{{(revenue_data[revenue_data | length - 1][3] / revenue_data[revenue_data | length -
+                        <small>{{((revenue_data[revenue_data | length - 1][3] - revenue_data[revenue_data | length - 2][3]) / revenue_data[revenue_data | length -
                             2][3] * 100) | round}}% so với tháng trước</small>
                         {%else%}
                         <h5>Chưa có dữ liệu</h5>

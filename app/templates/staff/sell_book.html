@@ -93,9 +93,9 @@
         <div class="card-body">
             <form id="customer-form" onsubmit="handleCustomer(event)">
                 <div class="mb-3">
-                    <label for="customer-email" class="form-label">Email khách hàng:</label>
-                    <input type="email" id="customer-email" class="form-control" placeholder="Nhập email của bạn"
-                           required>
+                     <label for="phone-number" class="form-label">Số điện thoại</label>
+                    <input type="tel" id="phone-number" class="form-control" name="phone-number"
+                           placeholder="Nhập số điện thoại" pattern="(84|0[3-9])[0-9]{8}" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Xác nhận</button>
             </form>
@@ -199,13 +199,13 @@
 
     function handleCustomer(event) {
         event.preventDefault();
-        const emailInput = document.getElementById("customer-email");
-        const email = emailInput.value;
+        const customer_phone_number = document.getElementById("phone-number");
+        const phone_number = customer_phone_number.value;
 
-        fetch('/staff/sell-book/find-customer-by-email', {
+        fetch('/staff/sell-book/find-customer-by-phone-number', {
             method: "POST",
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email: email})
+            body: JSON.stringify({phone_number: phone_number})
         })
             .then(response => {
                 if (!response.ok) {

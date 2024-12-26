@@ -30,7 +30,6 @@ cloudinary.config(
     api_key=os.getenv('API_KEY'),
     api_secret=os.getenv('API_SECRET'))
 
-# redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 redis_client = redis.StrictRedis(
     host=os.getenv("REDIS_HOST"),

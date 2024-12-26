@@ -132,8 +132,8 @@ def change_status_order(order, new_created_date, order_status):
     db.session.commit()
 
 
-def find_customer_by_email(email):
-    return User.query.filter_by(email=email, account_role=AccountRole.KhachHang).first()
+def find_customer_by_phone_number(phone_number):
+    return User.query.filter_by(phone_number=phone_number, account_role=AccountRole.KhachHang).first()
 
 
 def get_all_genre():
@@ -196,6 +196,7 @@ def check_inventory(data):
 
 
 def import_into_inventory(book_receipt_details):
+    print('ok')
     for book_receipt_detail in book_receipt_details:
         tmp = get_book_in_inventory(book_receipt_detail.book_id)
         if tmp:

@@ -32,8 +32,6 @@ def inject_config_system():
         'order_offline_cancel_timeout': dao.get_config_system('order_offline_cancel_timeout').value if dao.get_config_system('order_offline_cancel_timeout') else None,
     }
     return {'system_config': system_config}
-
-
 @app.route('/')
 def home():
     genre = request.args.get('genre')
@@ -348,14 +346,14 @@ def sell_book():
                            current_page=page, query=query)
 
 
-@app.route('/staff/sell-book/find-customer-by-email', methods=['POST'])
+@app.route('/staff/sell-book/find-customer-by-phone-number', methods=['POST'])
 @role_required(['nhanVien'])
-def find_customer_email():
+def find_customer_phong_number():
     data = request.get_json()
-    email = data.get('email')
-    user = dao.find_customer_by_email(email)
+    phone_number = data.get('phone_number')
+    user = dao.find_customer_by_phone_number(phone_number)
     if user is None:
-        return jsonify({'success': False, 'message': 'email not found'})
+        return jsonify({'success': False, 'message': 'phone number not found'})
     return jsonify({'success': True, 'user': user.to_dic()})
 
 

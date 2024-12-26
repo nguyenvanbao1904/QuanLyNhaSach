@@ -95,8 +95,8 @@
         </div>
         <div class="row">
             {% for book in books %}
-            <div class="col-md-6 mb-4 d-flex mt-5">
-                <div class="col-6 d-flex flex-column justify-content-between" style="max-width: 40%">
+            <div class="col-md-6 mb-4 d-flex mt-5 align-items-center">
+                <div class="col-5 d-flex flex-column justify-content-between" style="max-width: 40%">
                     <a href=/products/{{book['book'].id}} class="ripple" data-mdb-ripple-color="light">
                         <img
                                 src="{{ book['book'].image }}"
@@ -107,7 +107,7 @@
                     </a>
                 </div>
 
-                <div class="col-6">
+                <div class="col-7">
                     <div class="ml-3 d-flex flex-column justify-content-around align-items-start p-4"
                          style="min-height: 100%; text-align: left">
                         <h5 class="fw-bold text-blue fs-2">{{ book['book'].name }}</h5>
@@ -120,17 +120,18 @@
                             endif %}
                             {% endfor %}
                         </p>
-                        <button class="btn btn-custom fs12 text-blue add-to-cart {% if book['quantity'] == 0 %}btn-secondary{% endif %}"
-                                data-book-id="{{ book['book'].id }}"
-                                data-book-price="{{ book['book'].price }}"
-                                {% if book[
-                        'quantity'] == 0 %}disabled{% endif %}>
-                        {% if book['quantity'] == 0 %}
-                        Hết hàng
-                        {% else %}
-                        Thêm vào giỏ hàng
-                        {% endif %}
+                        <button class="btn btn-custom fs12 text-blue add-to-cart {% if book.quantity == 0 %}btn-secondary{% endif %}"
+                                data-book-id="{{ book.book.id }}"
+                                data-book-price="{{ book.book.price }}"
+                                {% if book.quantity== 0 %}disabled{% endif %}>
+                            {% if book.quantity == 0 %}
+                            Hết hàng
+                            {% else %}
+                            Thêm vào giỏ hàng
+                            {% endif %}
                         </button>
+
+
                     </div>
                 </div>
             </div>

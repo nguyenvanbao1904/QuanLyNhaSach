@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 quantity: quantity,
                 book_id: bookId,
             }).toString();
-
             fetch('/cart', {
                 method: 'POST',
                 headers: {
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(error => {
                     console.error(error);
-                    alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
+                    alert("Có lỗi khi thêm vào giỏ hàng");
                 });
         });
     });
