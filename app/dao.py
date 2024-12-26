@@ -145,6 +145,8 @@ def get_all_author():
 
 
 def find_genres(genre_ids):
+    if genre_ids is None:
+        return []
     rs = []
     for genre_id in genre_ids:
         genre = Genre.query.get(genre_id)
@@ -257,13 +259,15 @@ def get_config_system(key=None):
     return ConfigSystem.query.filter_by(key=key).first()
 
 
-def update_config_system(data):
+def update_or_create_config_system(data):
     for key, value in data.items():
         tmp = ConfigSystem.query.filter_by(key=key).first()
         if tmp is None:
-            raise Exception('Config system not found')
-        tmp.value = value
-        db.session.add(tmp)
+            config_system = ConfigSystem(key=key, value=value)
+            db.session.add(config_system)
+        else:
+            tmp.value = value
+            db.session.add(tmp)
     db.session.commit()
 
 
@@ -303,6 +307,8 @@ def get_sales_data_by_month_and_book():
             .all()
             )
 
+def get_genre_by_id(genre_id):
+    return Genre.query.filter_by(id=genre_id).first()
 
 if __name__ == '__main__':
     with app.app_context():

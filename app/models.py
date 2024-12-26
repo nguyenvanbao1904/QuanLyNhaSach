@@ -1,10 +1,11 @@
 import enum
 import re
 
+from sqlalchemy import event
 from sqlalchemy.orm import validates
 from wtforms.validators import ValidationError
 
-from app import db, app
+from app import db
 import datetime
 from flask_login import UserMixin
 
@@ -79,7 +80,6 @@ Book_Genre = db.Table('book_genre',
                        db.Column('genre_id', db.Integer, db.ForeignKey('genre.id'), primary_key=True),
                        db.Column('book_id', db.Integer, db.ForeignKey('book.id'), primary_key=True))
 
-
 class Author(Item):
     name = db.Column(db.String(50), unique=True, nullable=False)
     def __str__(self):
@@ -87,6 +87,7 @@ class Author(Item):
 
 class Genre(Item):
     name = db.Column(db.String(50), unique=True, nullable=False)
+    book = db.relationship('Book', backref='genre', lazy=True)
     def __str__(self):
         return self.name
 
@@ -103,9 +104,19 @@ class Book(Item):
     book_receipts = db.relationship('BookReceiptDetail', backref='book', lazy=True)
     order_details = db.relationship('OrderDetail', backref='book', lazy=True)
     book_inventory = db.relationship('BookInventory', backref='book', lazy=True, uselist=False)
+    primary_genre_id = db.Column(db.Integer, db.ForeignKey(Genre.id), nullable=False)
 
     def __str__(self):
         return self.name
+
+    def __init__(self, **kwargs):
+        import dao
+        super().__init__(**kwargs)
+        if self.primary_genre_id:
+            genre = dao.get_genre_by_id(self.primary_genre_id)
+            if genre and genre not in self.genres:
+                self.genres.append(genre)
+                db.session.add(self)
 
 class BookReceipt(Item):
     book_receipt_details = db.relationship('BookReceiptDetail', backref='receipt', lazy=True, cascade="all,delete")
@@ -144,10 +155,3 @@ class OrderDetail(db.Model):
     book_id = db.Column(db.Integer, db.ForeignKey(Book.id), nullable=False)
     order_id = db.Column(db.Integer, db.ForeignKey(Order.id), nullable=False)
     unit_price = db.Column(db.Float, nullable=False)
-
-if __name__ == '__main__':
-    with app.app_context():
-        if int(input('1:Tao moi\n0:Xoa\n')):
-            db.create_all()
-        else:
-            db.drop_all()

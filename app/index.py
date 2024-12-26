@@ -2,7 +2,6 @@ import math
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta
-import re
 
 from sqlalchemy.exc import IntegrityError
 
@@ -27,10 +26,10 @@ def inject_cart_quantity():
 def inject_config_system():
     system_config = {
         # se cache sau vi du 'max_stock_threshold': redis.get('config:stock_import_limit') or dao.get_config('stock_import_limit'),
-        'inventory_min_import': dao.get_config_system('inventory_min_import').value,
-        'inventory_import_limit': dao.get_config_system('inventory_import_limit').value,
-        'order_online_cancel_timeout': dao.get_config_system('order_online_cancel_timeout').value,
-        'order_offline_cancel_timeout': dao.get_config_system('order_offline_cancel_timeout').value,
+        'inventory_min_import': dao.get_config_system('inventory_min_import').value if dao.get_config_system('inventory_min_import') else None,
+        'inventory_import_limit': dao.get_config_system('inventory_import_limit').value if dao.get_config_system('inventory_import_limit') else None,
+        'order_online_cancel_timeout': dao.get_config_system('order_online_cancel_timeout').value if dao.get_config_system('order_online_cancel_timeout') else None,
+        'order_offline_cancel_timeout': dao.get_config_system('order_offline_cancel_timeout').value if dao.get_config_system('order_offline_cancel_timeout') else None,
     }
     return {'system_config': system_config}
 
@@ -44,12 +43,13 @@ def home():
     page_size = 4
     inventory = dao.get_inventory(genre=genre, orderby=orderby, q=query, page=page, page_size=page_size)
     books = []
-    for item in inventory:
-        books.append({
-            'book': item.book,
-            'quantity': item.current_quantity,
-        })
-    total = dao.get_count_inventory(genre, query)
+    if inventory:
+        for item in inventory:
+            books.append({
+                'book': item.book,
+                'quantity': item.current_quantity,
+            })
+    total = dao.get_count_inventory(genre, query) if dao.get_count_inventory(genre, query) else 0
     title_book = None
     if len(books) != 0:
         title_book = books[random.randint(0, len(books) - 1)]
@@ -437,25 +437,29 @@ def add_books():
         image_url = ""
         index = 0
         for book_data in books_data:
-            authors = dao.find_authors(book_data.get('authors'))
-            genres = dao.find_genres(book_data.get('genres'))
-            del book_data['authors']
-            del book_data['genres']
-            if request.files:
-                image_file = request.files[f'images[{index}]']
-                try:
-                    upload_result = cloudinary.uploader.upload(image_file)
-                    print(upload_result)
-                    image_url = upload_result['secure_url']
-                except Exception as e:
-                    err_msg = f"Avatar upload failed: {str(e)}"
-                    return jsonify({'success': False, 'message': 'Upload image failed'})
-            book = models.Book(**book_data, authors=authors, genres=genres, image=image_url)
-            db.session.add(book)
-            index += 1
+            if book_data:
+                authors = dao.find_authors(book_data.get('authors'))
+                genres = dao.find_genres(book_data.get('genres'))
+                del book_data['authors']
+                if book_data.get('genres'):
+                    del book_data['genres']
+                if request.files:
+                    image_file = request.files[f'images[{index}]']
+                    try:
+                        upload_result = cloudinary.uploader.upload(image_file)
+                        print(upload_result)
+                        image_url = upload_result['secure_url']
+                    except Exception as e:
+                        err_msg = f"Avatar upload failed: {str(e)}"
+                        return jsonify({'success': False, 'message': 'Upload image failed'})
+
+                book = models.Book(**book_data, authors=authors, genres=genres, image=image_url)
+                db.session.add(book)
+                index += 1
         db.session.commit()
         return jsonify({'success': True, 'message': 'Books added'})
     except Exception as e:
+        print(e)
         return jsonify({'success': False, 'message': 'Add books failed'})
 
 
@@ -477,7 +481,6 @@ def import_books():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
-
 
 # admin
 
@@ -501,7 +504,7 @@ def admin():
 def update_config_system():
     try:
         data = request.get_json()
-        dao.update_config_system(data)
+        dao.update_or_create_config_system(data)
         return jsonify({'success': True, 'message': 'Config system updated'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})

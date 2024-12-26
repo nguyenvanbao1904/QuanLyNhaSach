@@ -13,18 +13,34 @@
                            placeholder="Nhập tên sách" required>
                 </div>
                 <div class="col-md-6 col-lg-4">
-                    <label for="genres_1" class="form-label">Thể loại</label>
-                    <select class="form-select select2-enable" id="genres_1" name="genres_1" multiple="multiple"
-                            required>
+                    <label for="primary_genre_id_1" class="form-labe">Thể loại chính</label>
+                    <select class="form-select select2-enable" id="primary_genre_id_1"
+                            onchange="handel_primary_genre_change(event)" name="primary_genre_id_1"
+                            data-placeholder="Chọn thể loại chính" required>
+                        <option value="">Chọn thể loại chính</option>
                         {% for genre in genres %}
                         <option value="{{ genre.id }}">{{ genre.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-6 col-lg-4">
+                    <label for="image_1" class="form-label">HÌnh ảnh đại diện</label>
+                    <input type="file" class="form-control" id="image_1" name="image_1" placeholder="Hình ảnh đại diện"
+                           accept="image/jpeg, image/png, image/gif" required>
+                </div>
+                <div class="col-md-6 col-lg-6">
+                    <label for="genres_1" class="form-label">Các thể loại phụ</label>
+                    <select class="form-select select2-enable" id="genres_1" name="genres_1" multiple="multiple"
+                            data-placeholder="Nhập các thể loại phụ">
+                        {% for genre in genres %}
+                        <option value="{{ genre.id }}">{{ genre.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-6">
                     <label for="authors_1" class="form-label">Tác giả</label>
                     <select class="form-select select2-enable" id="authors_1" name="authors_1" multiple="multiple"
-                            required>
+                            data-placeholder="Nhập tác giả" required>
                         {% for author in authors %}
                         <option value="{{ author.id }}">{{ author.name }}</option>
                         {% endfor %}
@@ -50,11 +66,6 @@
                     <textarea class="form-control" id="description_1" name="description_1" placeholder="Nhập mô tả"
                               rows="3" required></textarea>
                 </div>
-                <div class="col-md-6 col-lg-4">
-                    <label for="image_1" class="form-label">HÌnh ảnh đại diện</label>
-                    <input type="file" class="form-control" id="image_1" name="image_1" placeholder="Hình ảnh đại diện"
-                           accept="image/jpeg, image/png, image/gif" required>
-                </div>
                 <div class="col-12 d-flex justify-content-end">
                     <button type="button" class="btn btn-danger btn-sm" onclick="deleteBookRow(this)">Xóa sách này
                     </button>
@@ -71,7 +82,7 @@
         </div>
     </form>
 </div>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script>
     let bookCount = 1;
 
@@ -80,67 +91,83 @@
         bookCount++;
         const bookRows = document.getElementById('book-info-rows');
         const newRow = `
-        <div class="row gy-4 book-row" id="book_row_${bookCount}">
-            <div class="col-12">
-                <h5 class="fw-bold">Sách ${bookCount}</h5>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="name_${bookCount}" class="form-label">Tên sách</label>
-                <input type="text" class="form-control" id="name_${bookCount}" name="name_${bookCount}" placeholder="Nhập tên sách" required>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="genres_${bookCount}" class="form-label">Thể loại</label>
-                <select class="form-select select2-enable" id="genres_${bookCount}" name="genres_${bookCount}" multiple="multiple" required>
-                    {% for genre in genres %}
-                    <option value="{{ genre.id }}">{{ genre.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="authors_${bookCount}" class="form-label">Tác giả</label>
-                <select class="form-select select2-enable" id="authors_${bookCount}" name="authors_${bookCount}" multiple="multiple" required>
-                    {% for author in authors %}
-                    <option value="{{ author.id }}">{{ author.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="price_${bookCount}" class="form-label">Giá</label>
-                <input type="number" class="form-control" id="price_${bookCount}" name="price_${bookCount}" placeholder="Giá sách" required>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="pages_${bookCount}" class="form-label">Số trang</label>
-                <input type="number" class="form-control" id="pages_${bookCount}" name="pages_${bookCount}" placeholder="Số trang" min="1" required>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <label for="duration_${bookCount}" class="form-label">Thời gian</label>
-                <input type="number" class="form-control" id="duration_${bookCount}" name="duration_${bookCount}" placeholder="Thời gian" min="0" step="0.1" required>
-            </div>
-            <div class="col-md-12">
-                <label for="description_${bookCount}" class="form-label">Mô tả</label>
-                <textarea class="form-control" id="description_${bookCount}" name="description_${bookCount}" placeholder="Nhập mô tả" rows="3" required></textarea>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                    <label for="image_${bookCount}" class="form-label">HÌnh ảnh đại diện</label>
-                    <input type="file" class="form-control" id="image_${bookCount}" name="image_${bookCount}" placeholder="Hình ảnh đại diện"
-                           accept="image/jpeg, image/png, image/gif" required>
-                </div>
-            <div class="col-12 d-flex justify-content-end">
-                <button type="button" class="btn btn-danger btn-sm" onclick="deleteBookRow(this)">Xóa sách này</button>
-            </div>
-        </div>`;
+    <div class="row gy-4 book-row" id="book_row_${bookCount}">
+        <div class="col-12">
+            <h5 class="fw-bold">Sách ${bookCount}</h5>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="name_${bookCount}" class="form-label">Tên sách</label>
+            <input type="text" class="form-control" id="name_${bookCount}" name="name_${bookCount}" placeholder="Nhập tên sách" required>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="primary_genre_id_${bookCount}" class="form-label">Thể loại chính</label>
+            <select class="form-select select2-enable" id="primary_genre_id_${bookCount}" name="primary_genre_id_${bookCount}" onchange="handel_primary_genre_change(event)" data-placeholder="Chọn thể loại chính" required>
+                        <option value="">Chọn thể loại chính</option>
+                {% for genre in genres %}
+                <option value="{{ genre.id }}">{{ genre.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="image_${bookCount}" class="form-label">HÌnh ảnh đại diện</label>
+            <input type="file" class="form-control" id="image_${bookCount}" name="image_${bookCount}" placeholder="Hình ảnh đại diện"
+                   accept="image/jpeg, image/png, image/gif" required>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <label for="genres_${bookCount}" class="form-label">Các thể loại phụ</label>
+            <select class="form-select select2-enable" id="genres_${bookCount}" name="genres_${bookCount}" multiple="multiple" data-placeholder="Nhập các thể loại phụ">
+                {% for genre in genres %}
+                <option value="{{ genre.id }}">{{ genre.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <label for="authors_${bookCount}" class="form-label">Tác giả</label>
+            <select class="form-select select2-enable" id="authors_${bookCount}" name="authors_${bookCount}" multiple="multiple" data-placeholder="Nhập tác giả" required>
+                {% for author in authors %}
+                <option value="{{ author.id }}">{{ author.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="price_${bookCount}" class="form-label">Giá</label>
+            <input type="number" class="form-control" id="price_${bookCount}" name="price_${bookCount}" placeholder="Giá sách" required>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="pages_${bookCount}" class="form-label">Số trang</label>
+            <input type="number" class="form-control" id="pages_${bookCount}" name="pages_${bookCount}" placeholder="Số trang" min="1" required>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label for="duration_${bookCount}" class="form-label">Thời gian</label>
+            <input type="number" class="form-control" id="duration_${bookCount}" name="duration_${bookCount}" placeholder="Thời gian" min="0" step="0.1" required>
+        </div>
+        <div class="col-md-12">
+            <label for="description_${bookCount}" class="form-label">Mô tả</label>
+            <textarea class="form-control" id="description_${bookCount}" name="description_${bookCount}" placeholder="Nhập mô tả" rows="3" required></textarea>
+        </div>
+        <div class="col-12 d-flex justify-content-end">
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteBookRow(this)">Xóa sách này</button>
+        </div>
+    </div>`;
 
         // Thêm dòng mới
         bookRows.insertAdjacentHTML('beforeend', newRow);
 
         // Tái khởi tạo select2 cho các phần tử mới
-        $('#genres_' + bookCount).select2({
-            placeholder: "Chọn thể loại",
+        $('#primary_genre_id_' + bookCount).select2({
+            placeholder: "Chọn thể loại chính",
             width: '100%',
             allowClear: true
         });
+
+        $('#genres_' + bookCount).select2({
+            placeholder: "Nhập các thể loại phụ",
+            width: '100%',
+            allowClear: true
+        });
+
         $('#authors_' + bookCount).select2({
-            placeholder: "Chọn tác giả",
+            placeholder: "Nhập tác giả",
             width: '100%',
             allowClear: true
         });
@@ -169,74 +196,106 @@
     });
 
     function addBooks(e) {
-    e.preventDefault();
+        e.preventDefault();
 
-    // Lấy form
-    const form = document.getElementById('post_new_book');
-    const formData = new FormData();
+        // Lấy form
+        const form = document.getElementById('post_new_book');
+        const formData = new FormData();
 
-    // Mảng chứa thông tin sách
-    const booksData = [];
+        // Mảng chứa thông tin sách
+        const booksData = [];
 
-    // Duyệt qua tất cả các input trong form và gộp thông tin
-    const rawFormData = new FormData(form);
-    rawFormData.forEach((value, key) => {
-        const keyParts = key.match(/(.+?)_(\d+)$/);
-        if (keyParts) {
-            const field = keyParts[1]; // Tên trường (book_name, genres, ...)
-            const index = parseInt(keyParts[2], 10) - 1; // Chỉ số mảng (bắt đầu từ 0)
+        // Duyệt qua tất cả các input trong form và gộp thông tin
+        const rawFormData = new FormData(form);
+        rawFormData.forEach((value, key) => {
+            const keyParts = key.match(/(.+?)_(\d+)$/);
+            if (keyParts) {
+                const field = keyParts[1]; // Tên trường (book_name, primary_genre_id, genres, authors, ...)
+                const index = parseInt(keyParts[2], 10) - 1; // Chỉ số mảng (bắt đầu từ 0)
 
-            if (!booksData[index]) {
-                booksData[index] = {}; // Tạo object cho sách nếu chưa có
-            }
-
-            // Nếu trường là genres hoặc authors => luôn đảm bảo là mảng
-            if (field === "genres" || field === "authors") {
-                if (!booksData[index][field]) {
-                    booksData[index][field] = [];
+                if (!booksData[index]) {
+                    booksData[index] = {}; // Tạo object cho sách nếu chưa có
                 }
-                booksData[index][field].push(value);
-            } else if (field === "image") {
-                // Đính kèm ảnh trực tiếp vào FormData
-                formData.append(`images[${index}]`, value);
-            } else {
-                booksData[index][field] = value;
+
+                // Nếu trường là genres hoặc authors => luôn đảm bảo là mảng
+                if (field === "genres" || field === "authors") {
+                    if (!booksData[index][field]) {
+                        booksData[index][field] = [];
+                    }
+                    booksData[index][field].push(value);
+                } else if (field === "primary_genre_id") {
+                    booksData[index][field] = value; // Lưu thể loại chính
+                } else if (field === "image") {
+                    // Đính kèm ảnh trực tiếp vào FormData
+                    formData.append(`images[${index}]`, value);
+                } else {
+                    booksData[index][field] = value; // Lưu các trường khác như tên sách, giá, mô tả, v.v.
+                }
             }
-        }
-    });
+        });
 
-    // Đảm bảo genres và authors luôn là mảng kể cả khi có 1 phần tử
-    booksData.forEach(book => {
-        if (book.authors && !Array.isArray(book.authors)) {
-            book.authors = [book.authors];
-        }
-        if (book.genres && !Array.isArray(book.genres)) {
-            book.genres = [book.genres];
-        }
-    });
+        // Đảm bảo genres và authors luôn là mảng kể cả khi có 1 phần tử
+        booksData.forEach(book => {
+            if (book.authors && !Array.isArray(book.authors)) {
+                book.authors = [book.authors];
+            }
+            if (book.genres && !Array.isArray(book.genres)) {
+                book.genres = [book.genres];
+            }
+        });
 
-    // Đưa dữ liệu sách (trừ ảnh) vào formData
-    formData.append('books', JSON.stringify(booksData));
+        // Đưa dữ liệu sách (trừ ảnh) vào formData
+        formData.append('books', JSON.stringify(booksData));
 
-    // Gửi dữ liệu lên server
-    fetch('/store_manager/add_books', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Không thể gửi thông tin sách!');
-        }
-    })
-    .then(data => {
-        alert(data.message);
-        location.reload()
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Có lỗi xảy ra khi gửi thông tin sách.');
-    });
-}
+        // Gửi dữ liệu lên server
+        fetch('/store_manager/add_books', {
+            method: 'POST',
+            body: formData,
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Không thể gửi thông tin sách!');
+                }
+            })
+            .then(data => {
+                alert(data.message);
+                if (data.success){
+                    location.reload()
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi gửi thông tin sách.');
+            });
+    }
+
+    function handel_primary_genre_change(event) {
+        const primaryGenreSelect = event.target;
+
+        // Lấy phần tử cha gần nhất chứa primary_genre_id và genres
+        const parentRow = primaryGenreSelect.closest('.row');
+
+        // Tìm 'select' của thể loại phụ gần nhất trong phần tử cha
+        const genresSelect = parentRow.querySelector('select[name^="genres_"]');
+        if (genresSelect) {
+        const selectedPrimaryGenreId = primaryGenreSelect.value;
+
+        $(genresSelect).find('option').each(function() {
+            const option = $(this);
+            if (option.val() === selectedPrimaryGenreId) {
+                option.prop('disabled', true);  // Vô hiệu hóa nếu trùng với thể loại chính
+            } else {
+                option.prop('disabled', false); // Kích hoạt lại các thể loại khác
+            }
+        });
+
+        // Cập nhật lại Select2 để phản ánh sự thay đổi
+        $(genresSelect).trigger('change');
+    } else {
+        console.error("Không tìm thấy 'genres' gần với 'primary_genre_id'");
+    }
+    }
+
 </script>
