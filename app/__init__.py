@@ -9,8 +9,6 @@ from app.redis_tasks import pubsub_worker
 from dotenv import load_dotenv
 import cloudinary
 import os
-import pymysql
-from sqlalchemy import create_engine
 app = Flask(__name__)
 load_dotenv()
 

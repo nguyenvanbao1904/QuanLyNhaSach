@@ -1,7 +1,6 @@
 import enum
 import re
 
-from sqlalchemy import event
 from sqlalchemy.orm import validates
 from wtforms.validators import ValidationError
 
