@@ -17,13 +17,13 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
 )
 
 # Cấu hình SSL cho kết nối MySQL
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'connect_args': {
-        'ssl': {
-            'ca': "./app/static/pem/ca.pem",
-        }
-    }
-}
+# app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+#     'connect_args': {
+#         'ssl': {
+#             'ca': "./app/static/pem/ca.pem",
+#         }
+#     }
+# }
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.secret_key = "kjasdlkasjdlkasdjlkasdjalskdjalskdj"
