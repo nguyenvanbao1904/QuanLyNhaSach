@@ -109,7 +109,7 @@ class Book(Item):
         return self.name
 
     def __init__(self, **kwargs):
-        import dao
+        from . import dao
         super().__init__(**kwargs)
         if self.primary_genre_id:
             genre = dao.get_genre_by_id(self.primary_genre_id)

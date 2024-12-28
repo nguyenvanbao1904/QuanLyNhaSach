@@ -2,11 +2,11 @@ import math
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta
-
+import traceback
 from sqlalchemy.exc import IntegrityError
 from wtforms.validators import ValidationError
 
-from app import app, login_manager, dao, redis_client, utils, db, models
+from app import app, login_manager, redis_client, utils, db, models
 from flask import render_template, redirect, url_for, request, session, jsonify, json
 from flask_login import login_user, logout_user, current_user
 from .redis_tasks import redis_utils
@@ -14,7 +14,7 @@ from app.decorator import role_required
 import cloudinary
 import cloudinary.uploader
 import re
-
+from . import dao
 
 @app.context_processor
 def inject_cart_quantity():
@@ -459,7 +459,7 @@ def add_books():
         db.session.commit()
         return jsonify({'success': True, 'message': 'Books added'})
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         return jsonify({'success': False, 'message': 'Add books failed'})
 
 
