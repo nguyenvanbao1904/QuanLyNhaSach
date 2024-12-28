@@ -18,10 +18,13 @@ def check_login(username, password):
         return None
 
 
-def add_user(username, password, first_name, last_name, avatar, phone_number, email):
+def add_user(username, password, first_name, last_name, avatar, phone_number, email, accountrole = None):
     try:
         user = User(username=username, password=str(hashlib.md5(password.strip().encode("utf-8")).hexdigest()),
                     first_name=first_name, last_name=last_name, avatar=avatar, phone_number=phone_number, email=email)
+        if accountrole == AccountRole.ADMIN:
+            user.account_role = AccountRole.ADMIN
+
         db.session.add(user)
         db.session.commit()
         return user
@@ -379,6 +382,9 @@ def total_quantity_monthly():
                       )
             .all()
     )
+
+def get_user_by_username(username):
+    return User.query.filter_by(username=username).first()
 
 if __name__ == '__main__':
     with app.app_context():
