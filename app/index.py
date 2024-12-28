@@ -9,7 +9,7 @@ from wtforms.validators import ValidationError
 from app import app, login_manager, dao, redis_client, utils, db, models
 from flask import render_template, redirect, url_for, request, session, jsonify, json
 from flask_login import login_user, logout_user, current_user
-from redis_tasks import redis_utils
+from .redis_tasks import redis_utils
 from app.decorator import role_required
 import cloudinary
 import cloudinary.uploader
