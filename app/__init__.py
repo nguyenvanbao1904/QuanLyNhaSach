@@ -71,7 +71,8 @@ def create_admin_user():
         print("Admin user created successfully.")
 
 @app.before_request
-def create_admin_on_start():
+def ready_to_start():
+    db.create_all()
     create_admin_user()
 
 
