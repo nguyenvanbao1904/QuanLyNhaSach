@@ -3,16 +3,17 @@ import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from sqlalchemy import String
 from sqlalchemy.exc import IntegrityError
+from wtforms.validators import ValidationError
 
-from app import app, login_manager, dao, OrderStatus, redis_client, models, utils
+from app import app, login_manager, dao, redis_client, utils, db, models
 from flask import render_template, redirect, url_for, request, session, jsonify, json
 from flask_login import login_user, logout_user, current_user
 from redis_tasks import redis_utils
 from app.decorator import role_required
 import cloudinary
 import cloudinary.uploader
+import re
 
 
 @app.context_processor
@@ -259,7 +260,7 @@ def checkout_method(method, ttl):
     total_price = dao.get_total_price(carts)
     carts.create_date = datetime.now()
     deadline = carts.create_date + timedelta(seconds=ttl)
-    dao.change_status_order(carts, carts.create_date, OrderStatus.PROCESSING)
+    dao.change_status_order(carts, carts.create_date, models.OrderStatus.PROCESSING)
     dao.export_out_to_inventory(carts.order_details)
     redis_utils.set_ttl_order(order_id, ttl, "PROCESSING")
     return render_template(f'/checkout_templates/checkout_{method}.html', order_id=int(order_id),
@@ -290,8 +291,8 @@ def checkout_confirm():
         order = dao.get_order_by_id(order_id)
     if order is None:
         return jsonify({'success': False, 'message': 'order not found'})
-    if order.order_status != OrderStatus.FAILED:
-        dao.change_status_order(order, order.create_date, OrderStatus.DONE)
+    if order.order_status != models.OrderStatus.FAILED:
+        dao.change_status_order(order, order.create_date, models.OrderStatus.DONE)
     else:
         return jsonify({'success': False, 'message': 'order failed'})
     redis_client.delete(int(order_id))
@@ -364,7 +365,7 @@ def staff_checkout():
     data = request.get_json()
     customer_id = data.get('customer_id')
     seller_id = data.get('seller_id')
-    order = models.Order(customer_id=customer_id, employee_id=seller_id, order_status=OrderStatus.DONE)
+    order = models.Order(customer_id=customer_id, employee_id=seller_id, order_status=models.OrderStatus.DONE)
 
     order_details = data.get('order_details')
     if order_details is None:
@@ -538,8 +539,3 @@ def update_config_system():
         return jsonify({'success': True, 'message': 'Config system updated'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
-
-
-if __name__ == '__main__':
-    from app.admin import *
-    app.run(debug=True)

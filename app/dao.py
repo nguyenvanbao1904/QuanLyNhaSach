@@ -5,8 +5,8 @@ from sqlalchemy import cast, Integer
 from sqlalchemy import Integer
 from sqlalchemy.sql import func
 
-from app import db, Genre, Order, OrderStatus, BookReceipt, BookInventory, ConfigSystem, app, Book_Genre
-from app.models import User, Book, OrderDetail, AccountRole, Author, BookReceiptDetail
+from app import db,app
+from .models import *
 
 
 def check_login(username, password):
