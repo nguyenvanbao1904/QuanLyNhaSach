@@ -70,6 +70,9 @@
 
         function updateCountdown() {
             const now = new Date().getTime();
+            console.log(now)
+            console.log(deadline)
+            console.log(deadline-now)
             const timeLeft = deadline - now;
 
             if (timeLeft > 0) {

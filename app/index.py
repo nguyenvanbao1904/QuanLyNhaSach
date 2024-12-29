@@ -1,7 +1,7 @@
 import math
 import random
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import traceback
 from sqlalchemy.exc import IntegrityError
 from wtforms.validators import ValidationError
@@ -258,7 +258,7 @@ def checkout_method(method, ttl):
     if carts is None:
         return redirect(url_for('not_found_page'))
     total_price = dao.get_total_price(carts)
-    carts.create_date = datetime.now()
+    carts.create_date = datetime.now(timezone.utc)
     deadline = carts.create_date + timedelta(seconds=ttl)
     print(deadline)
     dao.change_status_order(carts, carts.create_date, models.OrderStatus.PROCESSING)
