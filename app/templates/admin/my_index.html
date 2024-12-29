@@ -525,7 +525,7 @@
                 data: {
                     labels: books,
                     datasets: [{
-                        label: `Doanh thu (${time})`,
+                        label: `Doanh số (${time})`,
                         data: quantity,
                         backgroundColor: books.map((_, i) => `hsl(${(i * 360) / books.length}, 70%, 60%)`),
                         borderColor: 'rgba(0, 0, 0, 0.1)',
@@ -540,7 +540,7 @@
                         },
                         title: {
                             display: true,
-                            text: `Doanh thu theo đầu sách (${time})`
+                            text: `Doanh số theo đầu sách (${time})`
                         }
                     },
                 }
