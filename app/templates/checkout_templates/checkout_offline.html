@@ -8,7 +8,7 @@
                 <p class="card-text text-muted fs-5">
                     Mã đơn hàng của bạn là: <span id="order-id" class="text-blue fw-bold">{{ "{:06d}".format(order_id) }}</span><br>
                     Tổng số tiền cần thanh toán: <span id="total-amount" class="text-blue price fw-bold" data-price={{total_price}}></span><br>
-                    Vui lòng chuẩn bị số tiền trên và thanh toán tại quầy trước {{ deadline.strftime('%H:%M:%S ngày: %d-%m-%Y') }} để hoàn tất đơn hàng.
+                    Vui lòng chuẩn bị số tiền trên và thanh toán tại quầy trước {{ local_deadline.strftime('%H:%M:%S ngày: %d-%m-%Y') }} để hoàn tất đơn hàng.
                 </p>
                 <p class="text-danger">Nếu không thanh toán trước {{ deadline.strftime('%H:%M:%S ngày: %d-%m-%Y') }} đơn hàng của bạn sẽ tự động hủy.</p>
                 <p class="text-danger">Hãy ghi lại mã đơn hàng của bạn. Nhân viên sẽ hỏi bạn khi thanh toán.</p>

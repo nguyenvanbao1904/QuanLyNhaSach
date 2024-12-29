@@ -1,4 +1,5 @@
 import math
+import os
 import random
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -264,8 +265,9 @@ def checkout_method(method, ttl):
     dao.change_status_order(carts, carts.create_date, models.OrderStatus.PROCESSING)
     dao.export_out_to_inventory(carts.order_details)
     redis_utils.set_ttl_order(order_id, ttl, "PROCESSING")
+    local_deadline = deadline + timedelta(hours=int(os.getenv('TIMEZONE_OFFSET', 0)))
     return render_template(f'/checkout_templates/checkout_{method}.html', order_id=int(order_id),
-                           total_price=total_price, deadline=deadline)
+                           total_price=total_price, deadline=deadline, local_deadline=local_deadline)
 
 
 @app.route('/checkout/offline', methods=['GET'])

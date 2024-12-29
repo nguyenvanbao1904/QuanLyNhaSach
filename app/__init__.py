@@ -16,15 +16,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}?charset=utf8mb4"
 )
 
-# Cấu hình SSL cho kết nối MySQL
-# app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-#     'connect_args': {
-#         'ssl': {
-#             'ca': "./app/static/pem/ca.pem",
-#         }
-#     }
-# }
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.secret_key = "kjasdlkasjdlkasdjlkasdjalskdjalskdj"
 app.config['TEMPLATES_AUTO_RELOAD'] = True

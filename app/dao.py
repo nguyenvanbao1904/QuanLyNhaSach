@@ -1,8 +1,6 @@
-import datetime
+from datetime import datetime, timezone
 import hashlib
 from sqlalchemy import cast, Integer
-
-from sqlalchemy import Integer
 from sqlalchemy.sql import func
 
 from app import db,app
@@ -204,7 +202,7 @@ def import_into_inventory(book_receipt_details):
         tmp = get_book_in_inventory(book_receipt_detail.book_id)
         if tmp:
             tmp.current_quantity += book_receipt_detail.quantity
-            tmp.last_updated = datetime.datetime.now()
+            tmp.last_updated = datetime.now(timezone.utc)
             db.session.add(tmp)
         else:
             book_inventory = BookInventory(book_id=book_receipt_detail.book_id,

@@ -5,13 +5,13 @@ from sqlalchemy.orm import validates
 from wtforms.validators import ValidationError
 
 from app import db
-import datetime
+from datetime import datetime, timezone
 from flask_login import UserMixin
 
 class Item(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    create_date = db.Column(db.DateTime, default=datetime.datetime.now())
+    create_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 class AccountRole(enum.Enum):
     ADMIN = 'admin'
@@ -69,7 +69,7 @@ class ConfigSystem(db.Model):
     key = db.Column(db.String(255), unique=True, nullable=False)
     value = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
-    last_update = db.Column(db.DateTime, default=datetime.datetime.now())
+    last_update = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
 Book_Author = db.Table('book_author',
                        db.Column('author_id', db.Integer, db.ForeignKey('author.id'), primary_key=True),
@@ -132,7 +132,7 @@ class BookReceiptDetail(db.Model):
 class BookInventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     current_quantity = db.Column(db.Integer, nullable=False)
-    last_updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
+    last_updated = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
     book_id = db.Column(db.Integer, db.ForeignKey(Book.id), nullable=False, unique=True)
 
 class OrderStatus(enum.Enum):
