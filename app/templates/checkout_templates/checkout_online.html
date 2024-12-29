@@ -55,7 +55,8 @@
                              alt="QR Code" class="img-fluid mb-3">
                         <div class="d-flex">
                             <button class="btn btn-custom bg-danger">Hủy thanh toán</button>
-                            <button class="btn btn-custom text-blue ms-3 btn-confirm-payment">Xác nhận thanh toán</button>
+                            <button class="btn btn-custom text-blue ms-3 btn-confirm-payment">Xác nhận thanh toán
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -64,30 +65,31 @@
     </div>
 </div>
 <script>
-    const deadline = new Date("{{deadline}}").getTime();
+    document.addEventListener("DOMContentLoaded", function () {
+        const deadline = new Date("{{deadline}}").getTime();
 
-    function updateCountdown() {
-        const now = new Date().getTime();
-        const timeLeft = deadline - now;
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const timeLeft = deadline - now;
 
-        if (timeLeft > 0) {
-            const totalHours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            if (timeLeft > 0) {
+                const totalHours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-            document.getElementById("countdown").textContent =
-                `${String(totalHours).padStart(2, '0')} : ${String(minutes).padStart(2, '0')} : ${String(seconds).padStart(2, '0')}`;
-        } else {
-            clearInterval(countdownInterval);
-            document.getElementById("countdown").textContent = "Hết hạn!";
-            alert("Hết hạn")
-            window.location.href = "/"
+                document.getElementById("countdown").textContent =
+                    `${String(totalHours).padStart(2, '0')} : ${String(minutes).padStart(2, '0')} : ${String(seconds).padStart(2, '0')}`;
+            } else {
+                clearInterval(countdownInterval);
+                document.getElementById("countdown").textContent = "Hết hạn!";
+                alert("Hết hạn")
+                window.location.href = "/"
+            }
         }
-    }
 
-    const countdownInterval = setInterval(updateCountdown, 1000);
-
-    updateCountdown();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        updateCountdown();
+    });
 
 
     document.querySelector('.btn-confirm-payment').addEventListener('click', () => {
