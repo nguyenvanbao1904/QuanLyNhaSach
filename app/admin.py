@@ -76,8 +76,13 @@ class UserView(ModelView):
         super(UserView, self).on_model_change(form, model, is_created)
 
 
+class OrderView(ModelView):
+    column_filters = ['order_status']
+
+
 admin = Admin(app=app, name='', url='/flask-admin', index_view=MyAdminIndexView())
 admin.add_view(BookAdminView(models.Book, db.session, name="Quản lý Sách"))
 admin.add_view(AuthorAdminView(models.Author, db.session, name="Tác giả"))
 admin.add_view(GenreAdminView(models.Genre, db.session, name="Thể loại"))
 admin.add_view(UserView(models.User, db.session, name="Quản lý người dùng"))
+admin.add_view(OrderView(models.Order, db.session, name="Quản lý hóa đơn"))

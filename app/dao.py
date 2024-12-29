@@ -231,6 +231,7 @@ def get_inventory(genre=None, orderby=None, q=None, page=None, page_size=None):
         query = query.order_by(Book.id.desc())
     if q:
         query = query.filter(Book.name.like(f"%{q}%"))
+    query.order_by(BookInventory.last_updated.desc())
     start = (page - 1) * page_size
     return query.offset(start).limit(page_size).all()
 
