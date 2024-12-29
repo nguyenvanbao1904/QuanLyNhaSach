@@ -260,6 +260,7 @@ def checkout_method(method, ttl):
     total_price = dao.get_total_price(carts)
     carts.create_date = datetime.now()
     deadline = carts.create_date + timedelta(seconds=ttl)
+    print(deadline)
     dao.change_status_order(carts, carts.create_date, models.OrderStatus.PROCESSING)
     dao.export_out_to_inventory(carts.order_details)
     redis_utils.set_ttl_order(order_id, ttl, "PROCESSING")
